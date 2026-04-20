@@ -131,7 +131,9 @@ Return ONLY a valid JSON object with these exact keys. No explanation, no markdo
     });
 
     if (!claudeRes.ok) {
-      return new Response(JSON.stringify({ error: 'Failed to analyze website content.' }), {
+      const errData = await claudeRes.json().catch(() => ({}));
+      const errMsg = errData?.error?.message || `Anthropic API error ${claudeRes.status}`;
+      return new Response(JSON.stringify({ error: errMsg }), {
         status: 500, headers: { 'Content-Type': 'application/json' }
       });
     }
