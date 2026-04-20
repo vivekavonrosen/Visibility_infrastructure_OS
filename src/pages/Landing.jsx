@@ -61,8 +61,8 @@ export default function Landing() {
         <div className="hero-bg-gradient" />
         <div className="hero-bg-lines" />
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 60, position: 'relative', zIndex: 1 }}>
-        <div className="hero-content" style={{ flex: '0 0 auto', maxWidth: 620 }}>
+        <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+        <div className="hero-content" style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
           <div className="hero-eyebrow">
             ✦ For Accomplished Women 50+ Building Next-Chapter Businesses
           </div>
@@ -129,26 +129,37 @@ export default function Landing() {
           </div>
         </div>
 
-          {/* Video — right side of hero */}
-          <div style={{
-            flex: '0 0 auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingRight: 20,
+        {/* Video — full width below hero text */}
+        <div style={{
+          marginTop: 48,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 16,
+        }}>
+          <p style={{
+            fontSize: '1rem',
+            color: 'rgba(255,255,255,0.75)',
+            letterSpacing: '0.02em',
+            textAlign: 'center',
+            maxWidth: 640,
+            margin: 0,
           }}>
-            <iframe
-              src="https://www.youtube.com/embed/_2TXaooITcI?start=2"
-              width="460"
-              height="259"
-              allow="autoplay"
-              style={{
-                borderRadius: 12,
-                border: '1px solid rgba(223,178,74,0.3)',
-                boxShadow: '0 8px 40px rgba(223,178,74,0.15)',
-              }}
-            />
-          </div>
+            Watch the video below for important step-by-step instructions on how to use the VIOS app.
+          </p>
+          <iframe
+            src="https://www.youtube.com/embed/_2TXaooITcI?start=2"
+            width="920"
+            height="518"
+            allow="autoplay; fullscreen"
+            allowFullScreen
+            style={{
+              borderRadius: 12,
+              border: '1px solid rgba(223,178,74,0.3)',
+              boxShadow: '0 8px 40px rgba(223,178,74,0.2)',
+            }}
+          />
+        </div>
         </div>
       </section>
 
