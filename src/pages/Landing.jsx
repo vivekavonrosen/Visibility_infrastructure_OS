@@ -62,11 +62,8 @@ export default function Landing() {
         <div className="hero-bg-lines" />
 
         <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
-        <div className="hero-content" style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
-          <div className="hero-eyebrow">
-            ✦ For Accomplished Women 50+ Building Next-Chapter Businesses
-          </div>
-          <h1 className="hero-title">
+        <div className="hero-content" style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
+          <h1 className="hero-title" style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', lineHeight: 1.05 }}>
             TURN YOUR<br />
             <span>WISDOM</span><br />
             INTO TRACTION
@@ -74,12 +71,12 @@ export default function Landing() {
           <div className="hero-subtitle">
             Clarity. Authority. Revenue.
           </div>
-          <p className="hero-desc">
+          <p className="hero-desc" style={{ maxWidth: 580, margin: '0 auto 32px' }}>
             Visibility Infrastructure OS is a guided strategy system that moves you from
             decades of expertise to visible authority to profitable business — using
             structured AI prompts, proven frameworks, and a clear path to income.
           </p>
-          <div className="hero-cta-group">
+          <div className="hero-cta-group" style={{ justifyContent: 'center' }}>
             <button className="btn-hero-primary" onClick={handleStart}>
               <span>⚡</span> Build Your Strategy
             </button>
@@ -91,24 +88,33 @@ export default function Landing() {
             </button>
           </div>
 
-          {/* Inline stats — no floating cards */}
+          {/* Stats — as tiles */}
           <div style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 40,
+            justifyContent: 'center',
+            gap: 20,
             marginTop: 48,
-            paddingTop: 28,
-            borderTop: '1px solid rgba(255,255,255,0.1)',
           }}>
             {[
               { num: '10', label: 'Strategy modules' },
               { num: '1', label: 'Complete system' },
               { num: '60–90 min', label: 'To complete' },
             ].map((stat, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+              <div key={i} style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(223,178,74,0.35)',
+                borderRadius: 12,
+                padding: '18px 28px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                backdropFilter: 'blur(8px)',
+                minWidth: 130,
+              }}>
                 <span style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: '2.2rem',
+                  fontSize: '2.4rem',
                   letterSpacing: '0.04em',
                   color: 'var(--gold)',
                   lineHeight: 1,
@@ -117,8 +123,8 @@ export default function Landing() {
                 </span>
                 <span style={{
                   fontSize: '0.72rem',
-                  color: 'rgba(255,255,255,0.4)',
-                  letterSpacing: '0.06em',
+                  color: 'rgba(255,255,255,0.6)',
+                  letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   fontWeight: 700,
                 }}>
@@ -131,22 +137,33 @@ export default function Landing() {
 
         {/* Video — full width below hero text */}
         <div style={{
-          marginTop: 48,
+          marginTop: 56,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 16,
+          gap: 20,
         }}>
-          <p style={{
-            fontSize: '1rem',
-            color: 'rgba(255,255,255,0.75)',
-            letterSpacing: '0.02em',
-            textAlign: 'center',
-            maxWidth: 640,
-            margin: 0,
+          <div style={{
+            background: 'rgba(223,178,74,0.12)',
+            border: '1px solid rgba(223,178,74,0.5)',
+            borderRadius: 10,
+            padding: '14px 32px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
           }}>
-            Watch the video below for important step-by-step instructions on how to use the VIOS app.
-          </p>
+            <span style={{ fontSize: '1.2rem' }}>▶</span>
+            <p style={{
+              fontSize: '1.05rem',
+              fontWeight: 700,
+              color: 'var(--gold)',
+              letterSpacing: '0.02em',
+              textAlign: 'center',
+              margin: 0,
+            }}>
+              Watch the video below for important step-by-step instructions on how to use the VIOS app.
+            </p>
+          </div>
           <iframe
             src="https://www.youtube.com/embed/_2TXaooITcI?start=2"
             width="920"
