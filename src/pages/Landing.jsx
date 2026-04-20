@@ -138,7 +138,7 @@ export default function Landing() {
             paddingRight: 20,
           }}>
             <iframe
-              src="https://drive.google.com/file/d/1iq9O-lMCy6Qn6WW9T8nplHLcQ1cOYHgR/preview"
+              src="https://www.youtube.com/embed/_2TXaooITcI?start=2"
               width="460"
               height="259"
               allow="autoplay"
