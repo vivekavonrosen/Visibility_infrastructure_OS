@@ -129,7 +129,7 @@ export default function Landing() {
           </div>
         </div>
 
-          {/* Logo — right side of hero */}
+          {/* Video — right side of hero */}
           <div style={{
             flex: '0 0 auto',
             display: 'flex',
@@ -137,15 +137,15 @@ export default function Landing() {
             justifyContent: 'center',
             paddingRight: 20,
           }}>
-            <img
-              src="/logo.png"
-              alt="Beyond the Dream Board"
+            <iframe
+              src="https://drive.google.com/file/d/1iq9O-lMCy6Qn6WW9T8nplHLcQ1cOYHgR/preview"
+              width="460"
+              height="259"
+              allow="autoplay"
               style={{
-                width: 260,
-                height: 260,
-                objectFit: 'contain',
-                opacity: 0.88,
-                filter: 'drop-shadow(0 8px 40px rgba(223,178,74,0.2))',
+                borderRadius: 12,
+                border: '1px solid rgba(223,178,74,0.3)',
+                boxShadow: '0 8px 40px rgba(223,178,74,0.15)',
               }}
             />
           </div>
