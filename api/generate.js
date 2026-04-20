@@ -50,7 +50,7 @@ export default async function handler(req) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4096,
       stream: true,
       system: `You are a senior business strategist specializing in helping accomplished professional women 50+ build visible authority businesses from their expertise. You give specific, grounded, commercially sharp advice. You avoid generic motivation, buzzwords, and vague inspiration. Every output is structured, actionable, and respects the intelligence of the reader. Use clear headers, short paragraphs, and concrete examples. Format your response in clean Markdown.`,
