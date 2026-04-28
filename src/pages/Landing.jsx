@@ -188,23 +188,25 @@ export default function Landing() {
           </div>
           <div style={{
             position: 'relative',
+            paddingBottom: '56.25%',
+            height: 0,
+            overflow: 'hidden',
             width: '100%',
             maxWidth: 920,
-            aspectRatio: '16 / 9',
           }}>
             <iframe
-              src="https://www.youtube-nocookie.com/embed/_2TXaooITcI?start=2"
-              loading="lazy"
+              src="https://www.youtube-nocookie.com/embed/_2TXaooITcI"
+              title="VIOS Introduction"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              loading="lazy"
               style={{
                 position: 'absolute',
-                inset: 0,
+                top: 0,
+                left: 0,
                 width: '100%',
                 height: '100%',
-                borderRadius: 12,
-                border: '1px solid rgba(223,178,74,0.3)',
-                boxShadow: '0 8px 40px rgba(223,178,74,0.2)',
+                border: 'none',
               }}
             />
           </div>
