@@ -52,9 +52,9 @@ export default function ExportBar() {
           style={{
             padding: '6px 14px',
             background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.12)',
+            border: '1.5px solid rgba(255,255,255,0.6)',
             borderRadius: 'var(--radius-sm)',
-            color: 'rgba(255,255,255,0.35)',
+            color: '#ffffff',
             fontSize: '0.72rem',
             fontWeight: 700,
             letterSpacing: '0.06em',

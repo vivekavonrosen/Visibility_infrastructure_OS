@@ -1,4 +1,19 @@
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext.jsx';
+
+function checkHasProgress() {
+  try {
+    const raw = localStorage.getItem('vios_state_v1');
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    const hasContext = parsed.businessContext &&
+      Object.values(parsed.businessContext).some(v => typeof v === 'string' && v.trim());
+    const hasModuleData = parsed.moduleData && Object.keys(parsed.moduleData).length > 0;
+    return !!(hasContext || hasModuleData);
+  } catch {
+    return false;
+  }
+}
 
 const MODULES_PREVIEW = [
   { num: '01', icon: '🏗️', title: 'Business Context', desc: 'Strategic foundation and market analysis' },
@@ -39,6 +54,13 @@ const OUTCOMES = [
 
 export default function Landing() {
   const { setView } = useApp();
+  const [hasProgress, setHasProgress] = useState(false);
+
+  useEffect(() => {
+    setHasProgress(checkHasProgress());
+  }, []);
+
+  const ctaLabel = hasProgress ? 'Continue Building' : 'Start Building';
 
   function handleStart() {
     setView('app');
@@ -52,7 +74,7 @@ export default function Landing() {
           VISIBILITY <span>INFRASTRUCTURE</span> OS
         </div>
         <button className="btn-nav-cta" onClick={handleStart}>
-          Start Building →
+          {ctaLabel} →
         </button>
       </nav>
 
@@ -78,7 +100,7 @@ export default function Landing() {
           </p>
           <div className="hero-cta-group" style={{ justifyContent: 'center' }}>
             <button className="btn-hero-primary" onClick={handleStart}>
-              <span>⚡</span> Build Your Strategy
+              <span>⚡</span> {ctaLabel}
             </button>
             <button
               className="btn-hero-secondary"
@@ -164,18 +186,28 @@ export default function Landing() {
               Watch the video below for important step-by-step instructions on how to use the VIOS app.
             </p>
           </div>
-          <iframe
-            src="https://www.youtube.com/embed/_2TXaooITcI?start=2"
-            width="920"
-            height="518"
-            allow="autoplay; fullscreen"
-            allowFullScreen
-            style={{
-              borderRadius: 12,
-              border: '1px solid rgba(223,178,74,0.3)',
-              boxShadow: '0 8px 40px rgba(223,178,74,0.2)',
-            }}
-          />
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: 920,
+            aspectRatio: '16 / 9',
+          }}>
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/_2TXaooITcI?start=2"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                borderRadius: 12,
+                border: '1px solid rgba(223,178,74,0.3)',
+                boxShadow: '0 8px 40px rgba(223,178,74,0.2)',
+              }}
+            />
+          </div>
         </div>
         </div>
       </section>
@@ -215,7 +247,7 @@ export default function Landing() {
               </p>
             </div>
             <button className="btn-hero-primary" onClick={handleStart} style={{ flexShrink: 0 }}>
-              <span>⚡</span> Start Now
+              <span>⚡</span> {ctaLabel}
             </button>
           </div>
 
@@ -436,7 +468,7 @@ export default function Landing() {
             builds the plan — from what you already know. Start now.
           </p>
           <button className="btn-hero-primary" onClick={handleStart} style={{ margin: '0 auto', display: 'inline-flex' }}>
-            <span>⚡</span> Build Your Visibility Strategy
+            <span>⚡</span> {ctaLabel}
           </button>
         </div>
       </section>

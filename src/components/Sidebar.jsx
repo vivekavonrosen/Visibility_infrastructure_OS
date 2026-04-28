@@ -80,6 +80,7 @@ export default function Sidebar() {
           <div className="nav-subtitle">Download & next steps</div>
         </div>
       </div>
+
       {/* User + Sign out */}
       <div className="sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '14px 20px' }}>
         {user && (
@@ -102,14 +103,14 @@ export default function Sidebar() {
           onClick={signOut}
           style={{
             width: '100%',
-            padding: '7px 12px',
-            background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.1)',
+            padding: '10px 12px',
+            background: 'var(--gold)',
+            border: '2px solid var(--gold)',
             borderRadius: 'var(--radius-md)',
-            color: 'rgba(255,255,255,0.35)',
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            letterSpacing: '0.06em',
+            color: 'var(--sidebar-bg)',
+            fontSize: '0.78rem',
+            fontWeight: 900,
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
             cursor: 'pointer',
             transition: 'all 0.18s ease',
@@ -118,8 +119,8 @@ export default function Sidebar() {
             justifyContent: 'center',
             gap: 6,
           }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--gold-light)'; e.currentTarget.style.borderColor = 'var(--gold-light)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'var(--gold)'; e.currentTarget.style.borderColor = 'var(--gold)'; }}
         >
           ← Sign Out
         </button>
