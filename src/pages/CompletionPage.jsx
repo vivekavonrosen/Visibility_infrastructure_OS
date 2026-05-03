@@ -85,7 +85,7 @@ export default function CompletionPage() {
 
           <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, maxWidth: 520, marginBottom: 28 }}>
             {stats.completed} of 10 modules complete. You now have a positioning strategy,
-            an audience intelligence profile, content pillars, a 30-day plan, and a
+            an audience intelligence profile, content pillars, a 4-week content plan, and a
             monetization roadmap — all built around your specific expertise.
           </div>
 

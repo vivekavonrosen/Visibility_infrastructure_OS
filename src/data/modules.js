@@ -436,15 +436,16 @@ ${qualityBlock()}`,
   },
 
   // ──────────────────────────────────────────────
-  // MODULE 7: 30-Day Content Plan
+  // MODULE 7: 4-Week Content Plan (generated weekly)
   // ──────────────────────────────────────────────
   {
     id: 'content-plan',
     number: 7,
-    title: '30-Day Content Plan',
+    title: '4-Week Content Plan',
     subtitle: 'Strategic Visibility Calendar',
     icon: '📅',
-    description: 'A full month of content mapped with strategic intent — not random posting. Every piece serves a purpose: reach, trust, authority, leads, or conversion.',
+    description: 'Four weeks of content mapped with strategic intent — five posts per week (Monday through Friday), twenty posts total across 28 calendar days. Generate one week at a time so each builds on the last. Every piece earns its place: reach, trust, authority, leads, or conversion.',
+    weeklyPlan: { totalWeeks: 4 },
     additionalFields: [
       {
         id: 'launchContext',
@@ -453,16 +454,32 @@ ${qualityBlock()}`,
         placeholder: 'Is there anything specific happening this month? A launch, a speaking event, a seasonal angle, a new offer going live? (optional)',
       }
     ],
-    buildPrompt: (ctx, prior, extras) => `Act as a senior content strategist.
+    buildPrompt: (ctx, prior, extras, weekNumber = 1, priorWeeksOutput = '') => {
+      const weeks = {
+        1: { label: 'Week 1', dayRange: 'Days 1–5', dayList: '1, 2, 3, 4, 5' },
+        2: { label: 'Week 2', dayRange: 'Days 8–12', dayList: '8, 9, 10, 11, 12' },
+        3: { label: 'Week 3', dayRange: 'Days 15–19', dayList: '15, 16, 17, 18, 19' },
+        4: { label: 'Week 4', dayRange: 'Days 22–26', dayList: '22, 23, 24, 25, 26' },
+      };
+      const w = weeks[weekNumber] || weeks[1];
+      const isFinalWeek = weekNumber === 4;
 
-Create a 30-day strategic content plan based on the context and content pillars already defined. Every post must serve a deliberate purpose. Avoid generic ideas — every piece should earn its place in the sequence.
+      return `Act as a senior content strategist.
+
+You are creating a 4-week strategic content plan, generated one week at a time. This generation is **${w.label} of 4**, covering **${w.dayRange}** (Monday through Friday of ${w.label.toLowerCase()}). The complete plan covers 28 calendar days with 5 posts per week — weekends are intentionally skipped — for 20 posts total.
+
+Every post must serve a deliberate purpose. Avoid generic ideas — every piece should earn its place in the sequence.
 ${priorContext(prior)}
 ${buildContext(ctx)}
-${extras?.launchContext ? `\nSpecific context for this month: ${extras.launchContext}` : ''}
+${extras?.launchContext ? `\nSpecific context for this month: ${extras.launchContext}\n` : ''}${priorWeeksOutput ? `\n---\nCONTENT ALREADY PUBLISHED IN PRIOR WEEKS OF THIS PLAN (build on this — do not repeat hooks, angles, or core messages already used; carry the narrative arc forward and reference earlier posts where useful):\n\n${priorWeeksOutput}\n---\n` : ''}
 
-Create a 30-day plan structured as follows.
+Generate **only ${w.label}** of the plan. Do not generate other weeks.
 
-For each of the 30 days, provide:
+Begin your output with this exact heading on its own line (it is used to stitch the full plan together — do not modify it):
+
+## 📅 ${w.label} — ${w.dayRange}
+
+Then for each of the 5 posting days in this week (${w.dayList}), provide:
 1. **Day number and topic**
 2. **Format** (text post, carousel, article, newsletter, short video, etc.)
 3. **Hook concept** — the opening angle or tension
@@ -472,24 +489,23 @@ For each of the 30 days, provide:
 7. **CTA** — soft (comment, share, reflect) or hard (click, book, join)
 8. **Why this post belongs in the sequence**
 
----
-
-After the 30 days:
+${isFinalWeek ? `After the 5 days of Week 4, also include the following plan-wide closing sections (these wrap up the full 4-week plan and should reference posts from all four weeks):
 
 ### Monthly Narrative Arc
-The strategic story the month tells — beginning, middle, momentum.
+The strategic story the full plan tells — beginning, middle, momentum, payoff.
 
 ### Top 5 Posts Most Likely to Drive Growth
-The reach-oriented posts with the highest potential for new audience.
+The reach-oriented posts across all 4 weeks with the highest potential for new audience. Cite them by day number.
 
 ### Top 5 Posts Most Likely to Drive Revenue
-The conversion-oriented posts most likely to generate leads or sales.
+The conversion-oriented posts most likely to generate leads or sales. Cite them by day number.
 
 ### Repetition and Balance Check
-Flag where the plan becomes repetitive, too sales-heavy, or too light on reach content.
+Look across all 4 weeks. Flag where the plan becomes repetitive, too sales-heavy, or too light on reach content. Be specific about which days and how to fix it.
 
-Ensure the month includes: reach-driven posts, trust-building posts, proof/credibility posts, objection-handling posts, offer-adjacent posts, and conversion-focused posts.
-${qualityBlock()}`,
+Ensure the full 4-week plan includes: reach-driven posts, trust-building posts, proof/credibility posts, objection-handling posts, offer-adjacent posts, and conversion-focused posts.` : `Set up momentum for the weeks that follow — leave clear narrative threads, open loops, or curiosity gaps that future weeks can resolve. Do **not** include monthly summary sections (Narrative Arc, Top Posts, Balance Check) — those come at the end of Week 4 only.`}
+${qualityBlock()}`;
+    },
   },
 
   // ──────────────────────────────────────────────
@@ -501,7 +517,7 @@ ${qualityBlock()}`,
     title: 'Post Generator',
     subtitle: 'Scroll-Stopping Content',
     icon: '✍️',
-    description: 'Generate a specific, high-performing post for any topic in your 30-day plan or content pillar strategy. Input the details and get a ready-to-publish post with hooks, CTAs, and an explanation of why it works.',
+    description: 'Generate a specific, high-performing post for any topic in your 4-week plan or content pillar strategy. Input the details and get a ready-to-publish post with hooks, CTAs, and an explanation of why it works.',
     additionalFields: [
       {
         id: 'postTopic',

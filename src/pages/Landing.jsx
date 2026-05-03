@@ -22,7 +22,7 @@ const MODULES_PREVIEW = [
   { num: '04', icon: '🔭', title: 'Competitor White Space', desc: 'Content gap and opportunity analysis' },
   { num: '05', icon: '🏛️', title: 'Content Pillars', desc: 'Conversion-oriented content themes' },
   { num: '06', icon: '📡', title: 'Platform Strategy', desc: 'LinkedIn and Substack engine' },
-  { num: '07', icon: '📅', title: '30-Day Content Plan', desc: 'Strategic visibility calendar' },
+  { num: '07', icon: '📅', title: '4-Week Content Plan', desc: 'Strategic visibility calendar' },
   { num: '08', icon: '✍️', title: 'Post Generator', desc: 'Scroll-stopping content creation' },
   { num: '09', icon: '💰', title: 'Monetization Strategy', desc: 'Audience conversion roadmap' },
   { num: '10', icon: '🚀', title: 'Revenue Acceleration', desc: '30-day income milestone plan' },
@@ -48,7 +48,7 @@ const OUTCOMES = [
   { label: 'Audience Psychology Profile', desc: 'A deep understanding of what your audience thinks, fears, and needs to hear.' },
   { label: 'Authority Lane', desc: 'The specific territory you\'ll own — credibly and memorably.' },
   { label: 'Content Pillars', desc: 'Five strategic themes, each with a conversion purpose and 10 post ideas.' },
-  { label: '30-Day Content Plan', desc: 'A full month of intentional posts mapped to reach, trust, and revenue goals.' },
+  { label: '4-Week Content Plan', desc: 'Twenty intentional posts across four weeks, mapped to reach, trust, and revenue goals.' },
   { label: 'Monetization Roadmap', desc: 'Your path from content and visibility to qualified leads and paying clients.' },
 ];
 
@@ -224,7 +224,7 @@ export default function Landing() {
         gap: 40,
         flexWrap: 'wrap',
       }}>
-        {['Positioning Clarity', 'LinkedIn Authority', 'Substack Strategy', '30-Day Content Plan', 'Revenue Roadmap'].map(item => (
+        {['Positioning Clarity', 'LinkedIn Authority', 'Substack Strategy', '4-Week Content Plan', 'Revenue Roadmap'].map(item => (
           <span key={item} style={{
             fontSize: '0.75rem', fontWeight: 900, letterSpacing: '0.12em',
             textTransform: 'uppercase', color: 'var(--sidebar-bg)'

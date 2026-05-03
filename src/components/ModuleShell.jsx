@@ -98,6 +98,151 @@ function FieldInput({ field, value, onChange }) {
   );
 }
 
+// Calendar day ranges for the 4-week content plan (Mon–Fri, weekends skipped)
+const WEEK_DAY_LABELS = {
+  1: 'Days 1–5',
+  2: 'Days 8–12',
+  3: 'Days 15–19',
+  4: 'Days 22–26',
+};
+
+function WeeklyGenerateSection({
+  totalWeeks, completedWeeks, nextWeek, allDone,
+  isGenerating, generatingWeek, onGenerateWeek, onAbort, onReset,
+}) {
+  const weeks = Array.from({ length: totalWeeks }, (_, i) => i + 1);
+
+  return (
+    <div className="generate-section" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 16 }}>
+      <div className="generate-section-info">
+        <div className="generate-section-title">
+          {allDone ? '✅ All 4 Weeks Generated' : `📅 Generate Week ${nextWeek} of ${totalWeeks}`}
+        </div>
+        <div className="generate-section-desc">
+          {allDone
+            ? 'Your full 4-week content plan is complete. Reset to start over.'
+            : completedWeeks === 0
+            ? 'Generate one week at a time. Each week builds on the previous weeks for narrative continuity.'
+            : `${completedWeeks} of ${totalWeeks} weeks done. Click below to generate the next week — it will append to the plan above.`
+          }
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${totalWeeks}, 1fr)`, gap: 10 }}>
+        {weeks.map((n) => {
+          const done = n <= completedWeeks;
+          const isNext = n === nextWeek && !allDone;
+          const locked = !done && !isNext;
+          const streaming = isGenerating && generatingWeek === n;
+
+          let bg, color, border, cursor, label, icon;
+          if (streaming) {
+            bg = 'linear-gradient(135deg, #c0392b, #96281b)';
+            color = 'white';
+            border = '1px solid #96281b';
+            cursor = 'pointer';
+            icon = <div className="spinner" style={{ width: 14, height: 14 }} />;
+            label = 'Stop';
+          } else if (done) {
+            bg = 'rgba(44,151,175,0.18)';
+            color = '#a8e6d8';
+            border = '1px solid rgba(44,151,175,0.45)';
+            cursor = 'default';
+            icon = '✅';
+            label = 'Generated';
+          } else if (isNext) {
+            bg = 'var(--gold)';
+            color = 'var(--sidebar-bg)';
+            border = '1px solid var(--gold)';
+            cursor = isGenerating ? 'not-allowed' : 'pointer';
+            icon = '⚡';
+            label = 'Generate';
+          } else {
+            bg = 'rgba(255,255,255,0.04)';
+            color = 'var(--text-muted)';
+            border = '1px dashed rgba(255,255,255,0.12)';
+            cursor = 'not-allowed';
+            icon = '🔒';
+            label = 'Locked';
+          }
+
+          const handleClick = () => {
+            if (streaming) onAbort();
+            else if (isNext && !isGenerating) onGenerateWeek(n);
+          };
+
+          return (
+            <button
+              key={n}
+              onClick={handleClick}
+              disabled={(locked || done || (isGenerating && !streaming))}
+              style={{
+                background: bg,
+                color,
+                border,
+                borderRadius: 'var(--radius-md)',
+                padding: '14px 12px',
+                cursor,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                textAlign: 'center',
+                opacity: locked ? 0.6 : 1,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: 0.85 }}>
+                Week {n}
+              </div>
+              <div style={{ fontSize: '0.78rem', opacity: 0.75 }}>
+                {WEEK_DAY_LABELS[n] || ''}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', fontWeight: 800, marginTop: 2 }}>
+                {typeof icon === 'string' ? <span>{icon}</span> : icon}
+                <span>{label}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {completedWeeks > 0 && !isGenerating && (
+        <button
+          onClick={onReset}
+          style={{
+            alignSelf: 'flex-end',
+            background: 'transparent',
+            border: '1px solid rgba(192,57,43,0.4)',
+            color: '#c0392b',
+            padding: '6px 12px',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.75rem',
+            cursor: 'pointer',
+          }}
+        >
+          ↻ Reset Plan
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Count completed weeks in a weekly-plan output by counting `## 📅 Week N` headings.
+// Returns 0 if none, up to totalWeeks. Weeks must appear in order; we take the max present.
+const WEEK_HEADING_RE = /^##\s*📅\s*Week\s*(\d+)\b/gim;
+function countCompletedWeeks(output, totalWeeks) {
+  if (!output) return 0;
+  let max = 0;
+  let m;
+  WEEK_HEADING_RE.lastIndex = 0;
+  while ((m = WEEK_HEADING_RE.exec(output)) !== null) {
+    const n = parseInt(m[1], 10);
+    if (n > max) max = n;
+  }
+  return Math.min(max, totalWeeks);
+}
+
 export default function ModuleShell({ moduleIndex, onNavigate }) {
   const { state, setBusinessContext, saveModuleOutput, saveModuleInputs, saveEditedOutput, setCurrentModule } = useApp();
   const module = MODULES[moduleIndex];
@@ -108,6 +253,15 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
   const [streamingText, setStreamingText] = useState('');
   const [error, setError] = useState('');
   const abortRef = useRef(null);
+
+  // Weekly plan state (only used for modules with weeklyPlan defined, e.g. Module 7)
+  const isWeekly = !!module.weeklyPlan;
+  const totalWeeks = module.weeklyPlan?.totalWeeks || 0;
+  const completedWeeks = isWeekly ? countCompletedWeeks(existingOutput, totalWeeks) : 0;
+  const nextWeek = isWeekly ? Math.min(completedWeeks + 1, totalWeeks) : 0;
+  const allWeeksDone = isWeekly && completedWeeks >= totalWeeks;
+  // Week being generated right now (set when handleGenerate is called for a weekly module)
+  const generatingWeekRef = useRef(0);
 
   // Website scraper state (Module 1 only)
   const [scrapeUrl, setScrapeUrl] = useState('');
@@ -176,7 +330,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
     saveModuleInputs(module.id, updated);
   }
 
-  async function handleGenerate() {
+  async function handleGenerate(weekOverride) {
     setError('');
     setIsGenerating(true);
     setStreamingText('');
@@ -186,10 +340,17 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
     const prior = getPriorOutput();
     const extras = moduleIndex === 0 ? null : localInputs;
 
+    // For weekly modules, capture which week we're generating and the prior weeks' output
+    const weekToGenerate = isWeekly ? (weekOverride || nextWeek) : 0;
+    const priorWeeksOutputAtStart = isWeekly && weekToGenerate > 1 ? existingOutput : '';
+    if (isWeekly) generatingWeekRef.current = weekToGenerate;
+
     let prompt;
     try {
       if (moduleIndex === 0) {
         prompt = module.buildPrompt(ctx);
+      } else if (isWeekly) {
+        prompt = module.buildPrompt(ctx, prior, extras, weekToGenerate, priorWeeksOutputAtStart);
       } else {
         prompt = module.buildPrompt(ctx, prior, extras);
       }
@@ -205,14 +366,22 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         setStreamingText(full);
       },
       (fullText) => {
-        saveModuleOutput(module.id, fullText);
+        if (isWeekly && weekToGenerate > 1 && priorWeeksOutputAtStart) {
+          // Append the new week to existing weeks with a separator
+          const combined = priorWeeksOutputAtStart.trimEnd() + '\n\n---\n\n' + fullText.trimStart();
+          saveModuleOutput(module.id, combined);
+        } else {
+          saveModuleOutput(module.id, fullText);
+        }
         setIsGenerating(false);
         setStreamingText('');
+        generatingWeekRef.current = 0;
       },
       (errMsg) => {
         setError(errMsg);
         setIsGenerating(false);
         setStreamingText('');
+        generatingWeekRef.current = 0;
       }
     );
   }
@@ -222,9 +391,22 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
       abortRef.current.abort();
       setIsGenerating(false);
       if (streamingText) {
-        saveModuleOutput(module.id, streamingText);
+        if (isWeekly && generatingWeekRef.current > 1 && existingOutput) {
+          const combined = existingOutput.trimEnd() + '\n\n---\n\n' + streamingText.trimStart();
+          saveModuleOutput(module.id, combined);
+        } else {
+          saveModuleOutput(module.id, streamingText);
+        }
       }
+      generatingWeekRef.current = 0;
     }
+  }
+
+  function handleResetWeeklyPlan() {
+    if (!isWeekly) return;
+    if (!window.confirm('Clear all generated weeks for this content plan and start over?')) return;
+    saveModuleOutput(module.id, '');
+    saveEditedOutput(module.id, '');
   }
 
   const priorOutput = getPriorOutput();
@@ -381,37 +563,51 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
       )}
 
       {/* Generate Section */}
-      <div className="generate-section">
-        <div className="generate-section-info">
-          <div className="generate-section-title">
-            {existingOutput ? '↻ Regenerate Strategy Output' : '⚡ Generate Strategy Output'}
+      {isWeekly ? (
+        <WeeklyGenerateSection
+          totalWeeks={totalWeeks}
+          completedWeeks={completedWeeks}
+          nextWeek={nextWeek}
+          allDone={allWeeksDone}
+          isGenerating={isGenerating}
+          generatingWeek={generatingWeekRef.current}
+          onGenerateWeek={(n) => handleGenerate(n)}
+          onAbort={handleAbort}
+          onReset={handleResetWeeklyPlan}
+        />
+      ) : (
+        <div className="generate-section">
+          <div className="generate-section-info">
+            <div className="generate-section-title">
+              {existingOutput ? '↻ Regenerate Strategy Output' : '⚡ Generate Strategy Output'}
+            </div>
+            <div className="generate-section-desc">
+              {existingOutput
+                ? 'You have a saved output. Regenerating will replace it.'
+                : isFirstModule
+                ? 'Fill in your business context above, then generate your strategic foundation.'
+                : 'The AI will use your business context plus all prior strategy outputs.'
+              }
+            </div>
           </div>
-          <div className="generate-section-desc">
-            {existingOutput
-              ? 'You have a saved output. Regenerating will replace it.'
-              : isFirstModule
-              ? 'Fill in your business context above, then generate your strategic foundation.'
-              : 'The AI will use your business context plus all prior strategy outputs.'
-            }
-          </div>
-        </div>
 
-        {isGenerating ? (
-          <button className="btn-generate" onClick={handleAbort} style={{ background: 'linear-gradient(135deg, #c0392b, #96281b)' }}>
-            <div className="spinner" />
-            Stop Generation
-          </button>
-        ) : (
-          <button
-            className="btn-generate"
-            onClick={handleGenerate}
-            disabled={isFirstModule && !localCtx.brandName?.trim()}
-          >
-            <span>✨</span>
-            {existingOutput ? 'Regenerate' : 'Generate'}
-          </button>
-        )}
-      </div>
+          {isGenerating ? (
+            <button className="btn-generate" onClick={handleAbort} style={{ background: 'linear-gradient(135deg, #c0392b, #96281b)' }}>
+              <div className="spinner" />
+              Stop Generation
+            </button>
+          ) : (
+            <button
+              className="btn-generate"
+              onClick={() => handleGenerate()}
+              disabled={isFirstModule && !localCtx.brandName?.trim()}
+            >
+              <span>✨</span>
+              {existingOutput ? 'Regenerate' : 'Generate'}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -433,7 +629,11 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         moduleId={module.id}
         output={existingOutput}
         isStreaming={isGenerating}
-        streamingText={streamingText}
+        streamingText={
+          isWeekly && isGenerating && generatingWeekRef.current > 1 && existingOutput
+            ? existingOutput.trimEnd() + '\n\n---\n\n' + streamingText
+            : streamingText
+        }
         onEditSave={(val) => saveEditedOutput(module.id, val)}
         moduleTitle={module.title}
         moduleSubtitle={module.subtitle}
