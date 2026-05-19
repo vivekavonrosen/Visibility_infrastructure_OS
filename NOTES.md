@@ -67,11 +67,70 @@
 
 **What's still optional / open for next time:**
 - **Configure Resend SMTP for Supabase auth emails.** Currently auth emails (password reset, magic link, etc.) still go through Supabase's default sender with the 4/hour rate limit. Not biting us right now because email confirmation is off, but if you ever turn it back on, or rely on magic-link sign-in heavily, set this up. Path: Supabase Authentication → Emails → SMTP tab. Use Resend SMTP credentials.
-- **Verify your domain in Resend.** Would let admin notification emails come from a real `noreply@beyondthedreamboard.com` address and let you send to any email (not just viveka@beyondthedreamboard.com). 5–10 min of DNS records once you're ready.
-- **Old Resend API key in chat history.** The first key Viveka pasted (`re_cmteBy46...`) should be revoked in Resend → API Keys if not already done. Only the new key (`re_U6viNPaS...`) is in use now in Vercel.
 
 **Next step:**
 Nothing required. The paywall is live and complete. When the first paying client comes through, the workflow is: wait for the email → click Grant in the admin panel → they refresh and they're in. Two minutes of work per customer.
+
+---
+
+### 2026-05-19 (continued — same day)
+
+After the paywall feature shipped, two more things happened in the same session:
+
+#### Security incident — leaked webhook secret rotated
+
+Within ~10 minutes of the migration 004 push, **GitGuardian flagged a secret** in the public repo: the `NOTIFY_WEBHOOK_SECRET` had been embedded directly in `supabase/migrations/004_notify_admin_on_signup_via_trigger.sql`. Real leak but small blast radius (only enabled spoofing fake "new signup" notification emails to Viveka's inbox — no data, auth, or money exposure).
+
+**Fix:**
+- Generated a fresh 64-char secret.
+- Stored it in **Supabase Vault** via direct SQL (NOT committed to git) — the secret lives in `vault.secrets` under name `notify_webhook_secret`.
+- Migration 005 (`005_read_notify_webhook_secret_from_vault.sql`) replaces the trigger function so it reads the secret at call time via `vault.decrypted_secrets`. This file is safe to commit — contains no secrets.
+- Vercel env var `NOTIFY_WEBHOOK_SECRET` rotated to the new value.
+- Vercel redeploy → tested via synthetic `pg_net.http_post` → 200 OK.
+- GitGuardian alert marked resolved → rotated.
+- Old Resend API key (`re_cmteBy46...`) revoked. Current key in use: `re_U6viNPaS...`.
+
+The old leaked secret is now inert — nothing in production accepts it as valid. Migration 004 still exists in git history (contains the dead secret); not worth rewriting history for a low-blast-radius secret that's been rotated.
+
+#### Resend domain verified
+
+- Added subdomain `updates.beyondthedreamboard.com` to Resend (industry-standard sending subdomain pattern — keeps email DNS isolated from the main website).
+- Added 3 DNS records in **Squarespace** (Settings → Domains → DNS Settings → EDIT → Custom Records):
+  - TXT `resend._domainkey.updates` → DKIM verification
+  - MX `send.updates` priority 10 → bounce routing
+  - TXT `send.updates` → SPF authorization
+- DNS propagated instantly; Resend verified within a few minutes.
+- Vercel env var `NOTIFY_FROM` updated to `VisibilityOS <noreply@updates.beyondthedreamboard.com>`.
+- Vercel redeploy → tested via synthetic `pg_net.http_post` → 200 OK with the new sender.
+
+#### What's true on production NOW (overrides the earlier notes)
+
+**Env vars in Vercel (all Production scope):**
+- `RESEND_API_KEY` — Resend API key `re_U6viNPaS...`
+- `ADMIN_EMAIL` — viveka@beyondthedreamboard.com
+- `NOTIFY_WEBHOOK_SECRET` — current valid secret (rotated; only stored in Vercel + Supabase Vault, not in any file)
+- `NOTIFY_FROM` — `VisibilityOS <noreply@updates.beyondthedreamboard.com>`
+
+**Where the webhook secret lives:** Vercel env var + Supabase Vault. If you ever need to rotate again:
+1. Generate a new value (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
+2. Update the Vault entry: `SELECT vault.update_secret('<secret-id>', '<new-value>')` — secret_id is `b14175ed-2317-495f-8e62-3549e6e0c5da`
+3. Update Vercel env var to same value
+4. Redeploy
+
+**DNS for sending email:** managed by Squarespace (registrar is GoDaddy, but nameservers point at Squarespace — `ns01-04.squarespacedns.com`). All Resend records live at `Settings → Domains → beyondthedreamboard.com → DNS Settings → Custom Records`.
+
+**Sending subdomain:** `updates.beyondthedreamboard.com`. If you ever want to send marketing emails from a root-domain address like `you@beyondthedreamboard.com`, you'd need to add the root domain as a second domain in Resend — the subdomain doesn't conflict.
+
+**Files added in the addendum:**
+- `supabase/migrations/005_read_notify_webhook_secret_from_vault.sql` (new)
+
+#### Cleanup tasks completed
+- ✅ GitGuardian alert resolved
+- ✅ Old Resend API key `re_cmteBy46...` revoked
+- ✅ Test users from this session deleted (3 viveka+test variants)
+
+#### Still optional / open
+- **Configure Resend SMTP for Supabase auth emails** — see the original entry above. Now even more attractive because the domain is already verified at Resend; just need to plug SMTP creds into Supabase's Auth SMTP settings.
 
 ---
 
