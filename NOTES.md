@@ -4,6 +4,77 @@
 
 ## Session Log
 
+### 2026-05-19
+
+**What we did:**
+- Closed the security gap where anyone could sign up at visibilityos.tech and access the paid VIOS product without paying. Now gated behind a `user_profiles.has_access` flag.
+- **Database (Supabase project `mjtrsjpaigpruigsaygo`):**
+  - New `public.user_profiles` table: `user_id` (FK to auth.users, unique), `has_access` boolean, `is_admin` boolean, `granted_reason` (text — 'paid', 'client', 'WTIC member', 'founder', etc.), `granted_at`, `notes`. Migration 002.
+  - Database trigger `on_auth_user_created` auto-inserts a profile row (with `has_access=false`) for every new signup.
+  - RLS policies: users read own profile only; admins read/write all profiles.
+  - Two admin RPCs (SECURITY DEFINER): `admin_list_users()` and `admin_set_access(user_id, has_access, reason, notes)` — both check `current_user_is_admin()` server-side.
+  - Hardened `user_outputs` RLS so reads/writes also require `current_user_has_access()`. Even if someone bypasses the React paywall by editing JS in their browser, RLS blocks them at the database. Migration 003.
+  - Backfilled all 11 existing users: vivekavr@gmail.com + viveka@beyondthedreamboard.com = admin+founder; john@marshallcenter.net = paid; the other 8 = 'WTIC member'.
+  - Extended the signup trigger to also `pg_net.http_post()` to `/api/notify-signup` so we get email-on-signup without needing a Supabase Database Webhook (which can't target tables in the `auth` schema). Migration 004.
+- **App (Vite + React + Vercel functions):**
+  - New `src/pages/Paywall.jsx` — warm, on-brand "complete your purchase" page that links to the beyondthedreamboard.com sales page and shows the user's email + a "Refresh access" button + sign-out.
+  - New `src/pages/Admin.jsx` at `?admin=1` — hidden from non-admins; lists all users with Grant/Revoke buttons and a reason dropdown. Calls `admin_set_access` RPC.
+  - `src/context/AuthContext.jsx` now loads the `user_profiles` row after login and exposes `hasAccess` / `isAdmin` / `refreshProfile` / `resendConfirmation`.
+  - `src/App.jsx` routing: `admin URL → landing → auth → paywall → workspace`. Admin URL takes priority once authenticated as admin.
+  - `src/pages/AuthPage.jsx` now shows a real modal popup after signup ("Check your inbox") with a Resend Email button. Same modal also fires if someone tries to sign in with an unconfirmed email — instead of the cryptic "Email not confirmed" error.
+- **Signup notifications:**
+  - New `api/notify-signup.js` Vercel edge function. Verifies a shared secret (`x-webhook-secret` header), calls Resend's API to email viveka@beyondthedreamboard.com whenever a new user signs up. Includes a link to the admin panel.
+  - Resend account set up via GitHub OAuth, using sandbox sender `onboarding@resend.dev` for now (no domain verification needed). API key in Vercel env var.
+- **Supabase auth config:**
+  - Email confirmation **turned OFF** in Authentication → Sign In / Providers → Email. New signups are instant — they enter email + password, click submit, and land straight on the paywall. The paywall is the actual security, not the confirm email.
+  - This also dodges the 4/hour rate limit on Supabase's default email sender entirely.
+
+**What's now working:**
+- ✅ Paywall live on visibilityos.tech. New signups land there immediately; only paid/granted users see the workspace.
+- ✅ Admin panel at `https://visibilityos.tech/?admin=1` — visible only to admins.
+- ✅ Notification email arrives at viveka@beyondthedreamboard.com within seconds of any new signup, with a link to the admin panel.
+- ✅ Existing 11 users keep full access.
+- ✅ All gating enforced both client-side (React redirect) and server-side (Postgres RLS).
+
+**How to grant a new client access (the 4-step workflow):**
+1. Client signs up at visibilityos.tech (lands on paywall).
+2. You get a notification email at viveka@beyondthedreamboard.com.
+3. Click the link → admin panel opens → find client's row.
+4. Pick a reason in the dropdown ("client" / "paid" / "comp" / etc.) → click **Grant**. They refresh and they're in.
+
+**Important caveats:**
+- Resend's sandbox sender (`onboarding@resend.dev`) can only send to the email tied to your Resend account (viveka@beyondthedreamboard.com). If you ever change `ADMIN_EMAIL` to vivekavr@gmail.com or anything else, Resend will silently reject the send. Fix is to verify your domain in Resend.
+- The `NOTIFY_WEBHOOK_SECRET` is embedded in Postgres migration 004 (so the SQL trigger can pass it to the Vercel function). It's also in Vercel env vars. If you ever rotate it, change it in both places.
+
+**Vercel env vars added (all in Production scope):**
+- `RESEND_API_KEY` — Resend API key (re_...)
+- `ADMIN_EMAIL` — viveka@beyondthedreamboard.com
+- `NOTIFY_WEBHOOK_SECRET` — shared secret for the webhook (also in migration 004)
+- `NOTIFY_FROM` — `VisibilityOS <onboarding@resend.dev>`
+
+**Files added/changed today:**
+- `supabase/migrations/002_user_profiles_paywall.sql` (new)
+- `supabase/migrations/003_harden_user_outputs_rls.sql` (new)
+- `supabase/migrations/004_notify_admin_on_signup_via_trigger.sql` (new)
+- `api/notify-signup.js` (new)
+- `src/pages/Paywall.jsx` (new)
+- `src/pages/Admin.jsx` (new)
+- `src/context/AuthContext.jsx` (rewritten)
+- `src/pages/AuthPage.jsx` (signup confirmation modal added)
+- `src/utils/supabase.js` (added fetchUserProfile, adminListUsers, adminSetAccess)
+- `src/App.jsx` (gating logic)
+- `vercel.json` (registered notify-signup.js)
+
+**What's still optional / open for next time:**
+- **Configure Resend SMTP for Supabase auth emails.** Currently auth emails (password reset, magic link, etc.) still go through Supabase's default sender with the 4/hour rate limit. Not biting us right now because email confirmation is off, but if you ever turn it back on, or rely on magic-link sign-in heavily, set this up. Path: Supabase Authentication → Emails → SMTP tab. Use Resend SMTP credentials.
+- **Verify your domain in Resend.** Would let admin notification emails come from a real `noreply@beyondthedreamboard.com` address and let you send to any email (not just viveka@beyondthedreamboard.com). 5–10 min of DNS records once you're ready.
+- **Old Resend API key in chat history.** The first key Viveka pasted (`re_cmteBy46...`) should be revoked in Resend → API Keys if not already done. Only the new key (`re_U6viNPaS...`) is in use now in Vercel.
+
+**Next step:**
+Nothing required. The paywall is live and complete. When the first paying client comes through, the workflow is: wait for the email → click Grant in the admin panel → they refresh and they're in. Two minutes of work per customer.
+
+---
+
 ### 2026-05-03
 
 **What we did:**
