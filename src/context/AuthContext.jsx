@@ -1,11 +1,12 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../utils/supabase.js';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { supabase, fetchUserProfile } from '../utils/supabase.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [session, setSession]   = useState(undefined); // undefined = loading
   const [user, setUser]         = useState(null);
+  const [profile, setProfile]   = useState(undefined); // undefined = not loaded yet; null = no row
 
   useEffect(() => {
     // Get initial session
@@ -22,6 +23,13 @@ export function AuthProvider({ children }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Load the user_profiles row whenever the user changes (login/logout/refresh)
+  useEffect(() => {
+    if (!user) { setProfile(null); return; }
+    setProfile(undefined); // mark "loading" so the gate doesn't flash the paywall
+    fetchUserProfile(user.id).then(setProfile);
+  }, [user]);
 
   async function signUp(email, password) {
     const { data, error } = await supabase.auth.signUp({ email, password });
@@ -45,18 +53,38 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut();
   }
 
-  const isLoading = session === undefined;
+  async function resendConfirmation(email) {
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    return { error };
+  }
+
+  // Lets the admin page refresh the current user's profile after toggling their own access.
+  const refreshProfile = useCallback(async () => {
+    if (!user) return;
+    const next = await fetchUserProfile(user.id);
+    setProfile(next);
+  }, [user]);
+
+  const isLoading       = session === undefined || (!!user && profile === undefined);
+  const isAuthenticated = !!session;
+  const hasAccess       = !!(profile && (profile.has_access || profile.is_admin));
+  const isAdmin         = !!(profile && profile.is_admin);
 
   return (
     <AuthContext.Provider value={{
       session,
       user,
+      profile,
       isLoading,
-      isAuthenticated: !!session,
+      isAuthenticated,
+      hasAccess,
+      isAdmin,
       signUp,
       signIn,
       signInWithMagicLink,
       signOut,
+      resendConfirmation,
+      refreshProfile,
     }}>
       {children}
     </AuthContext.Provider>

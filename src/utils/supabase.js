@@ -45,6 +45,43 @@ export async function fetchUserOutputs(userId) {
   }
 }
 
+// ── user_profiles helpers ────────────────────────────────────
+// Used by AuthContext to gate the workspace behind has_access.
+
+export async function fetchUserProfile(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('has_access, is_admin, granted_reason')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) {
+      console.warn('Supabase fetch profile error:', error.message);
+      return null;
+    }
+    return data; // { has_access, is_admin, granted_reason } or null
+  } catch (e) {
+    console.warn('Supabase fetch profile exception:', e.message);
+    return null;
+  }
+}
+
+export async function adminListUsers() {
+  const { data, error } = await supabase.rpc('admin_list_users');
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function adminSetAccess(targetUserId, hasAccess, reason, notes) {
+  const { error } = await supabase.rpc('admin_set_access', {
+    target_user_id: targetUserId,
+    new_has_access: hasAccess,
+    new_reason: reason ?? null,
+    new_notes:  notes  ?? null,
+  });
+  if (error) throw new Error(error.message);
+}
+
 export async function upsertUserOutput(userId, moduleId, outputText) {
   try {
     const { error } = await supabase
