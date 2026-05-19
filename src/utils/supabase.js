@@ -52,14 +52,14 @@ export async function fetchUserProfile(userId) {
   try {
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('has_access, is_admin, granted_reason')
+      .select('has_access, is_admin, granted_reason, workshop_id, access_expires_at, display_name')
       .eq('user_id', userId)
       .maybeSingle();
     if (error) {
       console.warn('Supabase fetch profile error:', error.message);
       return null;
     }
-    return data; // { has_access, is_admin, granted_reason } or null
+    return data;
   } catch (e) {
     console.warn('Supabase fetch profile exception:', e.message);
     return null;
@@ -78,6 +78,69 @@ export async function adminSetAccess(targetUserId, hasAccess, reason, notes) {
     new_has_access: hasAccess,
     new_reason: reason ?? null,
     new_notes:  notes  ?? null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+// ── workshops ────────────────────────────────────────────────
+// Public: anyone (incl. unauthenticated) can look up a workshop by slug.
+// Returns { id, slug, name, ends_at, is_joinable } or null.
+export async function getWorkshopBySlug(slug) {
+  try {
+    const { data, error } = await supabase.rpc('get_workshop_by_slug', {
+      workshop_slug: slug,
+    });
+    if (error) {
+      console.warn('Supabase get_workshop_by_slug error:', error.message);
+      return null;
+    }
+    return (data && data[0]) || null;
+  } catch (e) {
+    console.warn('Supabase get_workshop_by_slug exception:', e.message);
+    return null;
+  }
+}
+
+// Called after a workshop attendee has signed up (so auth.uid() is set).
+// Attaches them to the workshop. Returns the workshop_id on success.
+export async function joinWorkshop(slug, displayName) {
+  const { data, error } = await supabase.rpc('workshop_join', {
+    workshop_slug:     slug,
+    new_display_name:  displayName ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+// Admin helpers
+export async function adminListWorkshops() {
+  const { data, error } = await supabase.rpc('admin_list_workshops');
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function adminCreateWorkshop({ slug, name, endsAt, maxAttendees }) {
+  const { data, error } = await supabase.rpc('admin_create_workshop', {
+    new_slug:           slug,
+    new_name:           name,
+    new_ends_at:        endsAt,
+    new_max_attendees:  maxAttendees ?? 50,
+  });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function adminListWorkshopAttendees(workshopId) {
+  const { data, error } = await supabase.rpc('admin_list_workshop_attendees', {
+    target_workshop_id: workshopId,
+  });
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function adminEndWorkshop(workshopId) {
+  const { error } = await supabase.rpc('admin_end_workshop', {
+    target_workshop_id: workshopId,
   });
   if (error) throw new Error(error.message);
 }
