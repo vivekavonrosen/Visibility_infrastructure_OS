@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
 import { useApp } from '../context/AppContext.jsx';
-import { useAuth } from '../context/AuthContext.jsx';
 import { MODULES, INTAKE_FIELDS } from '../data/modules.js';
 import { getModuleData, getEffectiveOutput } from '../utils/storage.js';
 import { streamCompletion } from '../utils/api.js';
@@ -110,7 +109,6 @@ const WEEK_DAY_LABELS = {
 function WeeklyGenerateSection({
   totalWeeks, completedWeeks, nextWeek, allDone,
   isGenerating, generatingWeek, onGenerateWeek, onAbort, onReset,
-  isReadonly,
 }) {
   const weeks = Array.from({ length: totalWeeks }, (_, i) => i + 1);
 
@@ -169,7 +167,6 @@ function WeeklyGenerateSection({
           }
 
           const handleClick = () => {
-            if (isReadonly) return;
             if (streaming) onAbort();
             else if (isNext && !isGenerating) onGenerateWeek(n);
           };
@@ -178,7 +175,7 @@ function WeeklyGenerateSection({
             <button
               key={n}
               onClick={handleClick}
-              disabled={isReadonly || (locked || done || (isGenerating && !streaming))}
+              disabled={(locked || done || (isGenerating && !streaming))}
               style={{
                 background: bg,
                 color,
@@ -248,7 +245,6 @@ function countCompletedWeeks(output, totalWeeks) {
 
 export default function ModuleShell({ moduleIndex, onNavigate }) {
   const { state, setBusinessContext, saveModuleOutput, saveModuleInputs, saveEditedOutput, setCurrentModule } = useApp();
-  const { isReadonly } = useAuth();
   const module = MODULES[moduleIndex];
   const moduleData = getModuleData(state, module.id);
   const existingOutput = getEffectiveOutput(state, module.id);
@@ -578,7 +574,6 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
           onGenerateWeek={(n) => handleGenerate(n)}
           onAbort={handleAbort}
           onReset={handleResetWeeklyPlan}
-          isReadonly={isReadonly}
         />
       ) : (
         <div className="generate-section">
@@ -605,11 +600,10 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
             <button
               className="btn-generate"
               onClick={() => handleGenerate()}
-              disabled={isReadonly || (isFirstModule && !localCtx.brandName?.trim())}
-              title={isReadonly ? 'Workshop ended — upgrade to keep generating' : undefined}
+              disabled={isFirstModule && !localCtx.brandName?.trim()}
             >
-              <span>{isReadonly ? '🔒' : '✨'}</span>
-              {isReadonly ? 'Read-only' : (existingOutput ? 'Regenerate' : 'Generate')}
+              <span>✨</span>
+              {existingOutput ? 'Regenerate' : 'Generate'}
             </button>
           )}
         </div>

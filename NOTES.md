@@ -4,69 +4,6 @@
 
 ## Session Log
 
-### 2026-05-19 (third pass — Workshop Mode scaffolded, NOT YET DEPLOYED OR TESTED)
-
-**Status: code is written, builds clean, applied to Supabase prod, but no end-to-end test has happened and nothing has been pushed/deployed. Pick up here next session.**
-
-**What we built:** A "workshop mode" that lets Viveka run live VIOS workshops with attendees getting time-boxed guest access (no paywall, no real password). After the workshop ends, attendees retain a **read-only** view of what they built, with an upgrade CTA. Viveka facilitates pacing verbally (no in-app broadcast — explicit decision).
-
-**Database — migration 006 (already applied to Supabase project `mjtrsjpaigpruigsaygo`):**
-- `public.workshops` table — id, slug (uppercase, e.g. `MAY-DALLAS`), name, ends_at, max_attendees, ended_early_at
-- `public.user_profiles` gained 3 columns: `workshop_id`, `access_expires_at`, `display_name`
-- **`current_user_has_access()` rewritten** (the function the entire paywall depends on). Now returns true for `is_admin OR has_access OR (workshop_id IS NOT NULL AND access_expires_at > now())`. Strictly additive — all 11 existing users have `workshop_id = NULL` so their behavior is unchanged.
-- New `current_user_has_readonly_access()` — true if `workshop_id` is set, regardless of expiry. Used to widen `user_outputs` SELECT policy.
-- `user_outputs` RLS: SELECT now allows `has_access OR readonly`; INSERT/UPDATE/DELETE still require `has_access`. So expired workshop attendees can read their outputs but cannot edit or generate.
-- Admin RPCs (all SECURITY DEFINER + admin-gated): `admin_create_workshop`, `admin_list_workshops`, `admin_list_workshop_attendees`, `admin_end_workshop`
-- Public-ish RPCs: `get_workshop_by_slug` (callable by anon — so the join page can preview the workshop name) and `workshop_join` (callable by authenticated user — attaches them to a workshop)
-
-**App code added/changed:**
-- `src/pages/WorkshopJoin.jsx` (new) — the public join page reached at `visibilityos.tech/?workshop=SLUG`. Looks up the workshop by slug, shows name + welcome message, attendee enters name + email (no password), gets signed up silently (random UUID password under the hood) and dropped into the workspace. Handles "workshop not found", "ended", "full" states.
-- `src/pages/Admin.jsx` (rewritten) — now tabbed: **Users** tab (existing functionality preserved 1:1) + **Workshops** tab (new). Workshops tab has: create workshop form (slug + name + duration hours + max attendees), list of all workshops with status/attendee count, copy-link button per row, expandable roster view, **End now** button that expires all active attendees immediately.
-- `src/pages/Workspace.jsx` — adds a prominent purple "YOUR WORKSHOP HAS ENDED — READ-ONLY MODE" banner with gold upgrade CTA when `isReadonly` is true.
-- `src/components/ModuleShell.jsx` — Generate button disables and shows 🔒 "Read-only" when `isReadonly`. Same for the weekly generate buttons in Module 7.
-- `src/context/AuthContext.jsx` — exposes `isReadonly`, `workshopId`, `signUpForWorkshop()`. Adds an effect that flips `workshopActive` to false the moment `access_expires_at` passes (via setTimeout) so the UI auto-switches to read-only mid-session.
-- `src/App.jsx` — routing recognizes `?workshop=SLUG`. Workshop page takes priority over auth/paywall for unauthenticated visitors. Read-only workshop alumni go straight to the workspace (which renders the banner).
-- `src/utils/supabase.js` — new helpers: `getWorkshopBySlug`, `joinWorkshop`, `adminListWorkshops`, `adminCreateWorkshop`, `adminListWorkshopAttendees`, `adminEndWorkshop`. Also extended `fetchUserProfile` to include the new workshop columns.
-
-**Files added:**
-- `supabase/migrations/006_workshop_mode.sql`
-- `src/pages/WorkshopJoin.jsx`
-
-**Files changed:**
-- `src/App.jsx`, `src/context/AuthContext.jsx`, `src/utils/supabase.js`, `src/pages/Admin.jsx`, `src/pages/Workspace.jsx`, `src/components/ModuleShell.jsx`
-
-**Design choices locked in (so you remember why):**
-- Workshop attendees are **real Supabase auth users** with a random password they never see. Same auth/RLS plumbing as paid users; just a different access path. No second auth system to maintain.
-- Routing uses `?workshop=SLUG` (query string), matching the existing `?admin=1` pattern. Pretty `/w/SLUG` URLs would need a Vercel rewrite — not done; can add later if it matters.
-- After expiry: read-only view (NOT total lock-out). Generous, and "I have this thing I built but can't edit it" is a strong upgrade hook.
-- No in-app pacing/broadcast controls. Viveka paces verbally from the front of the room. Explicit yes/no decision — don't add this later without revisiting why.
-- No automatic "here's your PDF + upgrade" email when workshops end. Skipped for MVP — the read-only view is the upgrade hook. Can add later via Vercel cron if useful.
-
-**What's NOT done yet:**
-1. **Not deployed.** Code is in the working tree, committed, but not pushed to `origin/main` → Vercel hasn't autodeployed. To ship: `git push origin main`.
-2. **Not tested end-to-end.** Migration is live on Supabase prod, but no one has actually created a workshop, joined as an attendee, or verified the read-only flip. The build passes (`npm run build` clean) and lint adds no new errors beyond the pre-existing pattern, but real-world clicks haven't happened.
-3. **No domain rewrite** — joining URL is `visibilityos.tech/?workshop=SLUG` not `visibilityos.tech/w/SLUG`. Functional but uglier.
-
-**To pick up next session — exact next steps:**
-1. `git push origin main` to deploy (Vercel autodeploys).
-2. Go to `visibilityos.tech/?admin=1` → click the new **Workshops** tab → **+ New Workshop** → slug `TEST-RUN`, name `Smoke Test`, duration 1 hour, max attendees 5.
-3. Copy the join link, open in a private/incognito browser window → enter a throwaway email + your name → should land straight in the workspace, full access, no paywall.
-4. Back in the admin tab → expand the workshop row → confirm the attendee shows up in the roster.
-5. Click **End now** → refresh the incognito tab → should see the purple "READ-ONLY" banner and the Generate button shows 🔒 "Read-only" disabled.
-6. Edge cases to verify: try joining a workshop URL with a slug that doesn't exist (should show "WORKSHOP UNAVAILABLE"). Try joining as an already-registered email (should error gracefully). Try clicking Generate while read-only (should do nothing).
-7. Clean up: delete the throwaway test user from Supabase Auth → Users.
-
-**Caveats / known potential issues to watch during testing:**
-- The `workshop_join` RPC sets `granted_reason = 'workshop:' || w.slug` only if it's NULL. If you ever convert a workshop attendee to paid, you'll want to manually update their reason.
-- Slug must match regex `^[A-Z0-9-]{3,32}$` (uppercase, digits, dashes, 3–32 chars). The create form auto-uppercases but rejects lowercase / spaces / underscores at the database level.
-- Workshop attendees signing up create real `auth.users` rows. They also fire the existing `on_auth_user_created` trigger → which fires the `notify-signup` webhook → which emails Viveka. **This means every workshop signup pings Viveka's inbox.** For a 25-person workshop, that's 25 emails. Acceptable for now; if it gets annoying, add an "is_workshop_signup" check to the trigger to skip the notification.
-- If Supabase email confirmation is ever re-enabled, the silent signup flow in `signUpForWorkshop` falls back to `signInWithPassword` — but the attendee would never see the password reset link. Currently confirmation is OFF so this is moot.
-- The `current_user_has_access()` function rewrite happened in migration 006. If you ever roll back migration 006, manually re-apply the version from migration 002 (which was `is_admin OR has_access` only).
-
-**Original 2026-05-19 work (paywall + admin + signup notifications) is below ⬇️ — unchanged by today's third pass.**
-
----
-
 ### 2026-05-19
 
 **What we did:**
