@@ -4,6 +4,48 @@
 
 ## Session Log
 
+### 2026-05-20 — Production incident + recovery
+
+**Headline:** A previous (un-named) agent committed and pushed `82996d1` "Scaffold workshop mode (built, not yet tested/deployed)" — 1500+ lines across 9 files. The commit message itself said *"NOT yet pushed/deployed. NOT yet end-to-end tested."* but it got pushed anyway. Vercel auto-deployed it. Something in those changes broke sign-in for everyone, including Viveka. This session was spent recovering.
+
+**What we did (in order):**
+
+1. **Reverted the workshop commit.** Created `5edbc7a "Revert 'Scaffold workshop mode...'"`, pushed. Vercel auto-redeployed to the previous known-good state. Production bundle hash returned to `index-cbpI1_DJ.js` (same as end-of-2026-05-19), confirming the deploy is identical to the last working version.
+
+2. **Verified migration 006's DB changes are truly additive.** The workshop commit had applied migration 006 to Supabase prod (new `workshops` table, 3 extra columns on `user_profiles`, new functions). Reverting the code does NOT reverse SQL migrations, so I checked the actual DB state. Confirmed `current_user_has_access()` was rewritten but is backward-compatible — it returns `true` for `is_admin OR has_access OR (active workshop access)`, so existing admin/paid users still pass. No existing-user RLS was broken.
+
+3. **Reset Viveka's password via SQL.** Even after the revert, she couldn't sign in — turned out to be a combo of browser-cached broken JS + likely-forgotten password + magic-link emails failing (Supabase rate limit). Ran `UPDATE auth.users SET encrypted_password = crypt('<temp>', gen_salt('bf'))` on both `vivekavr@gmail.com` and `viveka@beyondthedreamboard.com`. She signed in with the new temp password.
+
+4. **Diagnosed why magic link was also failing.** Root cause: Supabase auth emails still went through their default sender, which has a 30/hr rate limit (we'd already bumped from the 4/hr default on 2026-05-19). Today's testing burned through it. Pre-existing "still optional" item from 2026-05-19 — we did it now to fix permanently.
+
+5. **Set up Supabase auth SMTP via Resend.** Authentication → Emails → SMTP tab. Sender: `noreply@updates.beyondthedreamboard.com`, Host: `smtp.resend.com`, Port: 465, Username: `resend`, Password: existing Resend API key `re_U6viNPaS...`. From now on all auth emails (magic link, password reset, confirmation) route through our verified domain with no meaningful rate limit.
+
+**What's true on production NOW:**
+- All of yesterday's paywall + admin + signup notification state still works (unchanged by today's events).
+- Viveka's password is the temp value she set in chat today. **Should be rotated next session** (just say "reset my password to X" — I'll run the SQL).
+- Auth emails now flow through Resend SMTP (no rate limit).
+- Migration 006's DB schema additions (`workshops` table, new columns on `user_profiles`, new functions) are still in the database but unused — the reverted code doesn't reference them.
+
+**Lessons / guardrails for future agents:**
+- **Never push a commit whose own message says "not yet tested/deployed".** The git push fires Vercel auto-deploy. If you genuinely want to commit-without-deploying, work on a non-`main` branch.
+- **Reverting a frontend commit does NOT reverse Supabase migrations.** Always verify the DB state separately after a revert if any migrations ran.
+- **When the user can't sign in to debug something, fastest unblock is `UPDATE auth.users SET encrypted_password = crypt(...)` via the Supabase MCP.** No need to wait on magic-link rate limits.
+
+**Files changed today:**
+- Revert commit `5edbc7a` deleted the new files from `82996d1` (WorkshopJoin.jsx, migration 006 SQL file) and restored old versions of App.jsx, AuthContext.jsx, ModuleShell.jsx, Workspace.jsx, Admin.jsx, supabase.js, NOTES.md.
+- No new app code written this session — only the revert + a SQL-only password reset + the Supabase dashboard SMTP config.
+
+**Open tasks for next session (saved in TaskList):**
+- **#2:** Decide whether to drop the orphaned workshop DB schema (migration 006 stuff). It's additive and harmless; leaving it is fine, dropping it would be a small cleanup migration.
+- **#4:** Add a forgot-password + reset flow to AuthPage (~30-45 min). Now feasible because Resend SMTP is configured — reset emails will actually send. Task description has full implementation plan.
+- **Workshop mode itself** (Viveka's original ask) — still unbuilt. The scaffold from `82996d1` exists in git history at that commit if anyone wants to look at the approach the previous agent took, but it should not be cherry-picked back as-is.
+
+**Housekeeping reminders:**
+- Password `djdofbu173jdi01!` is in this session's chat history. Rotate it in next session.
+- All other secrets (Resend API key, webhook secret, Supabase URL/anon key) unchanged from 2026-05-19.
+
+---
+
 ### 2026-05-19
 
 **What we did:**
