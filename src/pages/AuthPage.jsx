@@ -2,14 +2,25 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function AuthPage() {
-  const { signIn, signUp, signInWithMagicLink, resendConfirmation } = useAuth();
+  const { signIn, signUp, sendEmailCode, verifyEmailCode, resendConfirmation } = useAuth();
 
+  // Note: the 'magic' mode is a passwordless EMAIL CODE flow (6-digit OTP), not a
+  // clickable link — codes survive corporate mail scanners that consume link tokens.
   const [mode, setMode]         = useState('signin');   // signin | signup | magic
+  const [otpStep, setOtpStep]   = useState('request');  // request | verify  (magic mode only)
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
+  const [code, setCode]         = useState('');
   const [status, setStatus]     = useState('idle');     // idle | loading | success | error
   const [message, setMessage]   = useState('');
+
+  function goToMode(next) {
+    setMode(next);
+    setOtpStep('request');
+    setCode('');
+    reset();
+  }
 
   // Confirmation modal state (shown after successful signup OR sign-in attempt with unconfirmed email)
   const [confirmModal, setConfirmModal] = useState(null); // { email } | null
@@ -19,16 +30,35 @@ export default function AuthPage() {
     setMessage('');
   }
 
+  async function handleResendCode() {
+    if (!email.trim()) return;
+    setStatus('loading');
+    setMessage('');
+    const { error } = await sendEmailCode(email.trim());
+    if (error) { setStatus('error'); setMessage(error.message); }
+    else { setStatus('success'); setMessage('New code sent — check your inbox.'); }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setStatus('loading');
     setMessage('');
 
     if (mode === 'magic') {
-      if (!email.trim()) { setStatus('error'); setMessage('Please enter your email address.'); return; }
-      const { error } = await signInWithMagicLink(email.trim());
+      // Step 1: request a 6-digit code by email.
+      if (otpStep === 'request') {
+        if (!email.trim()) { setStatus('error'); setMessage('Please enter your email address.'); return; }
+        const { error } = await sendEmailCode(email.trim());
+        if (error) { setStatus('error'); setMessage(error.message); return; }
+        setStatus('idle'); setMessage(''); setCode(''); setOtpStep('verify');
+        return;
+      }
+      // Step 2: verify the code → establishes a session.
+      const cleaned = code.replace(/\D/g, '');
+      if (cleaned.length < 6) { setStatus('error'); setMessage('Enter the code from your email.'); return; }
+      const { error } = await verifyEmailCode(email.trim(), cleaned);
       if (error) { setStatus('error'); setMessage(error.message); }
-      else { setStatus('success'); setMessage(`Check your inbox — we sent a sign-in link to ${email}.`); }
+      // On success, AuthContext updates session → App re-renders to workspace
       return;
     }
 
@@ -126,12 +156,13 @@ export default function AuthPage() {
           }}>
             {mode === 'signin' && 'WELCOME BACK'}
             {mode === 'signup' && 'CREATE ACCOUNT'}
-            {mode === 'magic'  && 'MAGIC LINK'}
+            {mode === 'magic'  && 'EMAIL CODE'}
           </div>
           <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)' }}>
             {mode === 'signin' && 'Sign in to access your strategy workspace.'}
             {mode === 'signup' && 'Create your account to get started.'}
-            {mode === 'magic'  && 'Get a one-click sign-in link sent to your inbox.'}
+            {mode === 'magic' && otpStep === 'request' && 'No password needed — we\'ll email you a sign-in code.'}
+            {mode === 'magic' && otpStep === 'verify'  && 'Enter the code we just emailed you.'}
           </div>
         </div>
 
@@ -144,11 +175,11 @@ export default function AuthPage() {
           {[
             { key: 'signin', label: 'Sign In' },
             { key: 'signup', label: 'Sign Up' },
-            { key: 'magic',  label: '✉️ Magic Link' },
+            { key: 'magic',  label: '✉️ Email Code' },
           ].map(tab => (
             <button
               key={tab.key}
-              onClick={() => { setMode(tab.key); reset(); }}
+              onClick={() => goToMode(tab.key)}
               style={{
                 flex: 1,
                 padding: '12px 8px',
@@ -215,11 +246,41 @@ export default function AuthPage() {
               placeholder="you@example.com"
               autoComplete="email"
               required
-              disabled={status === 'loading'}
+              disabled={status === 'loading' || (mode === 'magic' && otpStep === 'verify')}
             />
           </div>
 
-          {/* Password fields (not shown for magic link) */}
+          {/* 6-digit code field (email-code mode, verify step) */}
+          {mode === 'magic' && otpStep === 'verify' && (
+            <div className="form-field" style={{ marginBottom: 20 }}>
+              <label className="form-label">Verification Code <span>*</span></label>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                className="form-input"
+                value={code}
+                onChange={e => { setCode(e.target.value.replace(/\D/g, '').slice(0, 8)); reset(); }}
+                placeholder="••••••••"
+                maxLength={8}
+                required
+                disabled={status === 'loading'}
+                style={{ letterSpacing: '0.5em', textAlign: 'center', fontSize: '1.3rem', fontWeight: 700 }}
+              />
+              <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+                <button type="button" onClick={handleResendCode} disabled={status === 'loading'}
+                  style={{ background: 'none', border: 'none', color: 'var(--purple)', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+                  Resend code
+                </button>
+                <button type="button" onClick={() => { setOtpStep('request'); setCode(''); reset(); }}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}>
+                  Use a different email
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Password fields (not shown for email-code mode) */}
           {mode !== 'magic' && (
             <div className="form-field" style={{ marginBottom: mode === 'signup' ? 16 : 24 }}>
               <label className="form-label">Password <span>*</span></label>
@@ -252,12 +313,12 @@ export default function AuthPage() {
             </div>
           )}
 
-          {mode === 'magic' && <div style={{ height: 8 }} />}
+          {mode === 'magic' && otpStep === 'request' && <div style={{ height: 8 }} />}
 
           {/* Submit */}
           <button
             type="submit"
-            disabled={status === 'loading' || status === 'success'}
+            disabled={status === 'loading'}
             style={{
               width: '100%',
               padding: '13px',
@@ -290,11 +351,13 @@ export default function AuthPage() {
                   borderRadius: '50%',
                   animation: 'spin 0.7s linear infinite',
                 }} />
-                {mode === 'magic' ? 'Sending Link...' : mode === 'signup' ? 'Creating Account...' : 'Signing In...'}
+                {mode === 'magic'
+                  ? (otpStep === 'request' ? 'Sending Code...' : 'Verifying...')
+                  : mode === 'signup' ? 'Creating Account...' : 'Signing In...'}
               </>
             ) : (
               <>
-                {mode === 'magic'  && '✉️ Send Magic Link'}
+                {mode === 'magic'  && (otpStep === 'request' ? '✉️ Email Me a Code' : '→ Verify & Sign In')}
                 {mode === 'signup' && '⚡ Create Account'}
                 {mode === 'signin' && '→ Sign In'}
               </>
@@ -304,16 +367,24 @@ export default function AuthPage() {
           {/* Mode switcher hint */}
           <div style={{ textAlign: 'center', marginTop: 18, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             {mode === 'signin' && (
-              <>Don't have an account?{' '}
-                <button type="button" onClick={() => { setMode('signup'); reset(); }}
-                  style={{ background: 'none', border: 'none', color: 'var(--purple)', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
-                  Sign up
-                </button>
+              <>
+                <div>Don't have an account?{' '}
+                  <button type="button" onClick={() => goToMode('signup')}
+                    style={{ background: 'none', border: 'none', color: 'var(--purple)', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
+                    Sign up
+                  </button>
+                </div>
+                <div style={{ marginTop: 8 }}>Forgot your password, or can't get in?{' '}
+                  <button type="button" onClick={() => goToMode('magic')}
+                    style={{ background: 'none', border: 'none', color: 'var(--purple)', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
+                    Email yourself a code
+                  </button>
+                </div>
               </>
             )}
             {mode === 'signup' && (
               <>Already have an account?{' '}
-                <button type="button" onClick={() => { setMode('signin'); reset(); }}
+                <button type="button" onClick={() => goToMode('signin')}
                   style={{ background: 'none', border: 'none', color: 'var(--purple)', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
                   Sign in
                 </button>
@@ -321,7 +392,7 @@ export default function AuthPage() {
             )}
             {mode === 'magic' && (
               <>Prefer a password?{' '}
-                <button type="button" onClick={() => { setMode('signin'); reset(); }}
+                <button type="button" onClick={() => goToMode('signin')}
                   style={{ background: 'none', border: 'none', color: 'var(--purple)', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
                   Sign in with password
                 </button>
