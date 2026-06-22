@@ -29,6 +29,7 @@
 **Status: COMPLETE.** Live on visibilityos.tech. Vicki has two ways in: (1) temp password `Vios-Welcome-7K42!`, or (2) Sign In → "Email yourself a code" (the scanner-proof path — preferred for her and any corporate client).
 
 **Open / next:**
+- **Magic Link template Subject heading** still reads the default "Your Magic Link" — the *body* was updated but the **Subject** is a separate field on the same template screen. Change it to e.g. "Your VisibilityOS sign-in code" so the subject matches the content. (Dashboard-only; can't be done via MCP.)
 - Tell Vicki her temp password (or just point her at the Email Code path); have her change the password if she uses it.
 - Leftover from prior sessions (not touched today): orphaned workshop DB schema cleanup (migration 006 additions), and workshop mode itself.
 
