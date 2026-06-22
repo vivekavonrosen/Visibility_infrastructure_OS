@@ -16,7 +16,7 @@
 - **Frontend (merged to `main` via PR #2, squash `9d90af1`, deployed to prod):**
   - `AuthContext.jsx`: replaced `signInWithMagicLink` with `sendEmailCode(email)` (`signInWithOtp` + `shouldCreateUser:false`, so only existing accounts get a code) and `verifyEmailCode(email, token)` (`verifyOtp` with `type:'email'`).
   - `AuthPage.jsx`: the old "Magic Link" tab is now a two-step **"✉️ Email Code"** flow (request code → enter code → verify). Added a "Forgot your password, or can't get in? Email yourself a code" link under the Sign In tab.
-- **Supabase Magic Link email template — DONE (Viveka edited it in the dashboard):** now emits `{{ .Token }}` (the code) with the `{{ .ConfirmationURL }}` link removed, so scanners have no link to consume. Auth emails route through Resend SMTP (set up 2026-05-20), no rate-limit concerns.
+- **Supabase Magic Link email template — DONE (Viveka edited it in the dashboard):** body now emits `{{ .Token }}` (the code) with the `{{ .ConfirmationURL }}` link removed, so scanners have no link to consume. Subject heading also updated to `Your VIOS One Time Sign-in Code (OTC)`. Note: template edits are cached by GoTrue for a few minutes — a saved change can take ~5 min to show up in sent mail (the subject update looked "stuck" until the cache cleared). Auth emails route through Resend SMTP (set up 2026-05-20), no rate-limit concerns.
 - **Gotcha found + fixed during testing: this project issues 8-DIGIT codes, not 6.** The input originally capped at 6 digits and truncated the code → verify failed. Fixed in commit `454a36a` (now part of the squash): input accepts up to 8 digits and the "6-digit" wording was removed so it's length-agnostic. Viveka also updated the email template wording to say "8-digit." If the OTP length is ever changed, the UI still tolerates 6–8 digits.
 
 **Verified end-to-end against production Supabase (not just locally):**
@@ -26,10 +26,9 @@
 - Wrong code → `403` rejected ✅
 - Production bundle on visibilityos.tech confirmed to contain the new flow after deploy ✅
 
-**Status: COMPLETE.** Live on visibilityos.tech. Vicki has two ways in: (1) temp password `Vios-Welcome-7K42!`, or (2) Sign In → "Email yourself a code" (the scanner-proof path — preferred for her and any corporate client).
+**Status: COMPLETE & fully verified.** Live on visibilityos.tech with subject + body + code length + sign-in all confirmed correct via real test emails to vivekavr@gmail.com. Vicki has two ways in: (1) temp password `Vios-Welcome-7K42!`, or (2) Sign In → "Email yourself a code" (the scanner-proof path — preferred for her and any corporate client).
 
 **Open / next:**
-- **Magic Link template Subject heading** still reads the default "Your Magic Link" — the *body* was updated but the **Subject** is a separate field on the same template screen. Change it to e.g. "Your VisibilityOS sign-in code" so the subject matches the content. (Dashboard-only; can't be done via MCP.)
 - Tell Vicki her temp password (or just point her at the Email Code path); have her change the password if she uses it.
 - Leftover from prior sessions (not touched today): orphaned workshop DB schema cleanup (migration 006 additions), and workshop mode itself.
 
