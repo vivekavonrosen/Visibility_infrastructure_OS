@@ -41,10 +41,26 @@ export function AuthProvider({ children }) {
     return { data, error };
   }
 
-  async function signInWithMagicLink(email) {
+  // Passwordless sign-in via a 6-digit email code (OTP).
+  // We deliberately use a code rather than a clickable link: corporate mail
+  // scanners (Defender SafeLinks, Mimecast, Proofpoint, etc.) pre-fetch links
+  // in emails and consume the one-time token before the user ever clicks,
+  // which silently breaks magic-link / reset-link sign-in. A code can't be
+  // consumed by a scanner. shouldCreateUser:false → only existing accounts get
+  // a code (new users sign up with a password on the Sign Up tab).
+  async function sendEmailCode(email) {
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { shouldCreateUser: false },
+    });
+    return { data, error };
+  }
+
+  async function verifyEmailCode(email, token) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email',
     });
     return { data, error };
   }
@@ -81,7 +97,8 @@ export function AuthProvider({ children }) {
       isAdmin,
       signUp,
       signIn,
-      signInWithMagicLink,
+      sendEmailCode,
+      verifyEmailCode,
       signOut,
       resendConfirmation,
       refreshProfile,

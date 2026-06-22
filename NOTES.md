@@ -4,6 +4,36 @@
 
 ## Session Log
 
+### 2026-06-22 — New client lockout + passwordless email-code (OTP) sign-in
+
+**Headline:** A new paying client, **Vicki Brackett (vicki.brackett@knowledgely.co)**, reported she "couldn't sign up." Investigation showed signup was never the problem — she'd signed up fine at 21:06 today, was email-confirmed, and had already been granted access (`has_access=true`, reason `paid`, visible in the admin panel). The real issue was **sign-in**: she didn't know her password, and *both* the password-reset link and the magic link failed to get her in (repeated `400 Invalid login credentials` in the auth logs; her latest recovery token sat unused in `auth.one_time_tokens`). Root cause: `knowledgely.co` is a corporate domain whose mail security scanner pre-fetches links in emails, consuming the single-use token before she can click. Link-based auth is fundamentally fragile for corporate inboxes.
+
+**Immediate unblock (done):**
+- Reset Vicki's password via SQL (the documented fast path): `UPDATE auth.users SET encrypted_password = crypt('Vios-Welcome-7K42!', gen_salt('bf')), updated_at=now() WHERE id='fbdcb6a8-78d7-4389-a414-089877fad772'`. She can now sign in with the **Sign In** tab using that temp password and lands straight in the workspace (access already granted). She should change it after.
+
+**Durable fix (built this session): passwordless 6-digit email-code (OTP) sign-in.**
+- Codes can't be consumed by mail scanners the way links can, so this fixes corporate-inbox lockouts and doubles as the forgot-password path (no separate reset page needed — you just sign in with a code).
+- **Frontend (code committed, NOT yet deployed — on branch `claude/jolly-mayer-f2g65x`):**
+  - `AuthContext.jsx`: replaced `signInWithMagicLink` with `sendEmailCode(email)` (`signInWithOtp` + `shouldCreateUser:false`) and `verifyEmailCode(email, token)` (`verifyOtp` with `type:'email'`).
+  - `AuthPage.jsx`: the old "Magic Link" tab is now a two-step **"✉️ Email Code"** flow (request code → enter 6 digits → verify). Added a "Forgot your password, or can't get in? Email yourself a code" link under the Sign In tab.
+- **REQUIRED manual step in Supabase before this works in prod** (can't be done via MCP — dashboard only): Authentication → Emails → Templates → **Magic Link** must be edited to show `{{ .Token }}` and **remove the `{{ .ConfirmationURL }}` link entirely** (if the link stays, scanners will still eat the token). Suggested body:
+  ```html
+  <h2>Your VisibilityOS sign-in code</h2>
+  <p>Enter this 6-digit code to sign in:</p>
+  <p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
+  <p>This code expires in 1 hour. If you didn't request it, ignore this email.</p>
+  ```
+  Emails already route through Resend SMTP (set up 2026-05-20), so no rate-limit concerns.
+
+**Deploy note:** changes are on the feature branch + a draft PR — pushing the branch does NOT auto-deploy (only `main` does). Merging the PR to `main` triggers the Vercel prod deploy. Do the Supabase template edit *before or right after* merging so the code flow has a code to deliver.
+
+**Open / next:**
+- Edit the Supabase Magic Link template (above) — without it, the Email Code tab sends an email with no code.
+- After deploy, smoke-test: Sign In tab → "Email yourself a code" → receive 6-digit code → verify → workspace.
+- Tell Vicki her temp password; have her change it once in.
+
+---
+
 ### 2026-05-20 — Production incident + recovery
 
 **Headline:** A previous (un-named) agent committed and pushed `82996d1` "Scaffold workshop mode (built, not yet tested/deployed)" — 1500+ lines across 9 files. The commit message itself said *"NOT yet pushed/deployed. NOT yet end-to-end tested."* but it got pushed anyway. Vercel auto-deployed it. Something in those changes broke sign-in for everyone, including Viveka. This session was spent recovering.
