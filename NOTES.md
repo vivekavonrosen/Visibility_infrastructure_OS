@@ -11,28 +11,30 @@
 **Immediate unblock (done):**
 - Reset Vicki's password via SQL (the documented fast path): `UPDATE auth.users SET encrypted_password = crypt('Vios-Welcome-7K42!', gen_salt('bf')), updated_at=now() WHERE id='fbdcb6a8-78d7-4389-a414-089877fad772'`. She can now sign in with the **Sign In** tab using that temp password and lands straight in the workspace (access already granted). She should change it after.
 
-**Durable fix (built this session): passwordless 6-digit email-code (OTP) sign-in.**
+**Durable fix (built, shipped, and verified live this session): passwordless email-code (OTP) sign-in.**
 - Codes can't be consumed by mail scanners the way links can, so this fixes corporate-inbox lockouts and doubles as the forgot-password path (no separate reset page needed — you just sign in with a code).
-- **Frontend (code committed, NOT yet deployed — on branch `claude/jolly-mayer-f2g65x`):**
-  - `AuthContext.jsx`: replaced `signInWithMagicLink` with `sendEmailCode(email)` (`signInWithOtp` + `shouldCreateUser:false`) and `verifyEmailCode(email, token)` (`verifyOtp` with `type:'email'`).
-  - `AuthPage.jsx`: the old "Magic Link" tab is now a two-step **"✉️ Email Code"** flow (request code → enter 6 digits → verify). Added a "Forgot your password, or can't get in? Email yourself a code" link under the Sign In tab.
-- **REQUIRED manual step in Supabase before this works in prod** (can't be done via MCP — dashboard only): Authentication → Emails → Templates → **Magic Link** must be edited to show `{{ .Token }}` and **remove the `{{ .ConfirmationURL }}` link entirely** (if the link stays, scanners will still eat the token). Suggested body:
-  ```html
-  <h2>Your VisibilityOS sign-in code</h2>
-  <p>Enter this 6-digit code to sign in:</p>
-  <p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
-  <p>This code expires in 1 hour. If you didn't request it, ignore this email.</p>
-  ```
-  Emails already route through Resend SMTP (set up 2026-05-20), so no rate-limit concerns.
+- **Frontend (merged to `main` via PR #2, squash `9d90af1`, deployed to prod):**
+  - `AuthContext.jsx`: replaced `signInWithMagicLink` with `sendEmailCode(email)` (`signInWithOtp` + `shouldCreateUser:false`, so only existing accounts get a code) and `verifyEmailCode(email, token)` (`verifyOtp` with `type:'email'`).
+  - `AuthPage.jsx`: the old "Magic Link" tab is now a two-step **"✉️ Email Code"** flow (request code → enter code → verify). Added a "Forgot your password, or can't get in? Email yourself a code" link under the Sign In tab.
+- **Supabase Magic Link email template — DONE (Viveka edited it in the dashboard):** now emits `{{ .Token }}` (the code) with the `{{ .ConfirmationURL }}` link removed, so scanners have no link to consume. Auth emails route through Resend SMTP (set up 2026-05-20), no rate-limit concerns.
+- **Gotcha found + fixed during testing: this project issues 8-DIGIT codes, not 6.** The input originally capped at 6 digits and truncated the code → verify failed. Fixed in commit `454a36a` (now part of the squash): input accepts up to 8 digits and the "6-digit" wording was removed so it's length-agnostic. Viveka also updated the email template wording to say "8-digit." If the OTP length is ever changed, the UI still tolerates 6–8 digits.
 
-**Deploy note:** changes are on the feature branch + a draft PR — pushing the branch does NOT auto-deploy (only `main` does). Merging the PR to `main` triggers the Vercel prod deploy. Do the Supabase template edit *before or right after* merging so the code flow has a code to deliver.
+**Verified end-to-end against production Supabase (not just locally):**
+- Send for unknown email + `shouldCreateUser:false` → `422 otp_disabled` (won't mint accounts via code) ✅
+- Send for existing user → `200`, token row created ✅
+- Real emailed code → `verifyOtp(type:'email')` → **session issued** ✅ (tested with live 8-digit codes read from vivekavr@gmail.com inbox)
+- Wrong code → `403` rejected ✅
+- Production bundle on visibilityos.tech confirmed to contain the new flow after deploy ✅
+
+**Status: COMPLETE.** Live on visibilityos.tech. Vicki has two ways in: (1) temp password `Vios-Welcome-7K42!`, or (2) Sign In → "Email yourself a code" (the scanner-proof path — preferred for her and any corporate client).
 
 **Open / next:**
-- Edit the Supabase Magic Link template (above) — without it, the Email Code tab sends an email with no code.
-- After deploy, smoke-test: Sign In tab → "Email yourself a code" → receive 6-digit code → verify → workspace.
-- Tell Vicki her temp password; have her change it once in.
+- **Magic Link template Subject heading** still reads the default "Your Magic Link" — the *body* was updated but the **Subject** is a separate field on the same template screen. Change it to e.g. "Your VisibilityOS sign-in code" so the subject matches the content. (Dashboard-only; can't be done via MCP.)
+- Tell Vicki her temp password (or just point her at the Email Code path); have her change the password if she uses it.
+- Leftover from prior sessions (not touched today): orphaned workshop DB schema cleanup (migration 006 additions), and workshop mode itself.
 
 ---
+
 
 ### 2026-05-20 — Production incident + recovery
 
