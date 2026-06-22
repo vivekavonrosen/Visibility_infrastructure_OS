@@ -55,7 +55,7 @@ export default function AuthPage() {
       }
       // Step 2: verify the code → establishes a session.
       const cleaned = code.replace(/\D/g, '');
-      if (cleaned.length < 6) { setStatus('error'); setMessage('Enter the 6-digit code from your email.'); return; }
+      if (cleaned.length < 6) { setStatus('error'); setMessage('Enter the code from your email.'); return; }
       const { error } = await verifyEmailCode(email.trim(), cleaned);
       if (error) { setStatus('error'); setMessage(error.message); }
       // On success, AuthContext updates session → App re-renders to workspace
@@ -161,8 +161,8 @@ export default function AuthPage() {
           <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)' }}>
             {mode === 'signin' && 'Sign in to access your strategy workspace.'}
             {mode === 'signup' && 'Create your account to get started.'}
-            {mode === 'magic' && otpStep === 'request' && 'No password needed — we\'ll email you a 6-digit sign-in code.'}
-            {mode === 'magic' && otpStep === 'verify'  && 'Enter the 6-digit code we just emailed you.'}
+            {mode === 'magic' && otpStep === 'request' && 'No password needed — we\'ll email you a sign-in code.'}
+            {mode === 'magic' && otpStep === 'verify'  && 'Enter the code we just emailed you.'}
           </div>
         </div>
 
@@ -253,16 +253,16 @@ export default function AuthPage() {
           {/* 6-digit code field (email-code mode, verify step) */}
           {mode === 'magic' && otpStep === 'verify' && (
             <div className="form-field" style={{ marginBottom: 20 }}>
-              <label className="form-label">6-Digit Code <span>*</span></label>
+              <label className="form-label">Verification Code <span>*</span></label>
               <input
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 className="form-input"
                 value={code}
-                onChange={e => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); reset(); }}
-                placeholder="••••••"
-                maxLength={6}
+                onChange={e => { setCode(e.target.value.replace(/\D/g, '').slice(0, 8)); reset(); }}
+                placeholder="••••••••"
+                maxLength={8}
                 required
                 disabled={status === 'loading'}
                 style={{ letterSpacing: '0.5em', textAlign: 'center', fontSize: '1.3rem', fontWeight: 700 }}
