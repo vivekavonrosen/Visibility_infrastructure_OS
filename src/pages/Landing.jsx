@@ -388,7 +388,7 @@ export default function Landing() {
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <span className="section-eyebrow" style={{ color: 'var(--gold)' }}>Who This Is For</span>
           <h2 className="section-title" style={{ color: 'white', marginBottom: 12 }}>
-            Built for women who are<br /><span style={{ color: 'var(--gold)' }}>accomplished, not starting over.</span>
+            Built for Gen X and Boomers who are<br /><span style={{ color: 'var(--gold)' }}>accomplished - not starting over.</span>
           </h2>
           <p className="section-desc" style={{ color: 'rgba(255,255,255,0.55)', marginBottom: 40 }}>
             You've already built something. Now it's time to make that expertise work for you
