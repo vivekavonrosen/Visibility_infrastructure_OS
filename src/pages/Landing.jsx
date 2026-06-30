@@ -36,11 +36,11 @@ const FOR_WHOM = [
 ];
 
 const STEPS = [
-  { num: '01', title: 'Complete Your Context', desc: 'The intake form builds your strategic foundation. Every module draws directly from it.' },
-  { num: '02', title: 'Run Each Module', desc: 'Ten modules move you from clarity to positioning to content to revenue — in sequence.' },
-  { num: '03', title: 'Strategy Compounds', desc: 'Each output feeds the next. Prior decisions become fixed context for deeper strategy.' },
-  { num: '04', title: 'Edit and Refine', desc: 'Every output is editable. Shape the language until it sounds exactly like you.' },
-  { num: '05', title: 'Export Your Document', desc: 'Download your complete strategy as a clean, reusable document you can act on immediately.' },
+  { num: '01', title: 'File Your Flight Plan', desc: 'The intake form builds your strategic foundation. Every instrument draws directly from it.' },
+  { num: '02', title: 'Run the Instruments', desc: 'Ten instruments move you from clarity to positioning to content to revenue — in sequence.' },
+  { num: '03', title: 'Altitude Compounds', desc: 'Each output feeds the next. Prior decisions become fixed context for deeper strategy.' },
+  { num: '04', title: 'Trim and Adjust', desc: 'Every output is editable. Shape the language until it sounds exactly like you.' },
+  { num: '05', title: 'Download Your Flight Log', desc: 'Download your complete strategy as a clean, reusable document you can act on immediately.' },
 ];
 
 const OUTCOMES = [
@@ -60,7 +60,7 @@ export default function Landing() {
     setHasProgress(checkHasProgress());
   }, []);
 
-  const ctaLabel = hasProgress ? 'Continue Building' : 'Start Building';
+  const ctaLabel = hasProgress ? 'Resume the climb' : 'Begin pre-flight';
 
   function handleStart() {
     setView('app');
@@ -86,17 +86,17 @@ export default function Landing() {
         <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
         <div className="hero-content" style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
           <h1 className="hero-title" style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', lineHeight: 1.05 }}>
-            TURN YOUR<br />
-            <span>WISDOM</span><br />
-            INTO TRACTION
+            YOU'RE ALREADY<br />
+            <span>AT ALTITUDE.</span><br />
+            TIME TO BE SEEN.
           </h1>
           <div className="hero-subtitle">
             Clarity. Authority. Revenue.
           </div>
           <p className="hero-desc" style={{ maxWidth: 580, margin: '0 auto 32px' }}>
-            Visibility Infrastructure OS is a guided strategy system that moves you from
-            decades of expertise to visible authority to profitable business — using
-            structured AI prompts, proven frameworks, and a clear path to income.
+            visibilityOS is your instrument panel — a guided system that turns decades of
+            expertise into visible authority and a steady signal the right people can track.
+            You file the flight plan; the instruments keep you on course to revenue.
           </p>
           <div className="hero-cta-group" style={{ justifyContent: 'center' }}>
             <button className="btn-hero-primary" onClick={handleStart}>
@@ -106,7 +106,7 @@ export default function Landing() {
               className="btn-hero-secondary"
               onClick={() => document.getElementById('modules')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              See all 10 modules ↓
+              See all 10 instruments ↓
             </button>
           </div>
 
@@ -118,8 +118,8 @@ export default function Landing() {
             marginTop: 48,
           }}>
             {[
-              { num: '10', label: 'Strategy modules' },
-              { num: '1', label: 'Complete system' },
+              { num: '10', label: 'Instruments' },
+              { num: '1', label: 'One flight plan' },
               { num: '60–90 min', label: 'To complete' },
             ].map((stat, i) => (
               <div key={i} style={{
@@ -183,7 +183,7 @@ export default function Landing() {
               textAlign: 'center',
               margin: 0,
             }}>
-              Watch the video below for important step-by-step instructions on how to use the VIOS app.
+              Watch the video below for important step-by-step instructions on how to fly the VIOS instruments.
             </p>
           </div>
           <div style={{
@@ -239,12 +239,12 @@ export default function Landing() {
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 40, flexWrap: 'wrap', gap: 20 }}>
             <div>
-              <span className="section-eyebrow">The System</span>
+              <span className="section-eyebrow">Your flight plan</span>
               <h2 className="section-title" style={{ marginBottom: 10 }}>
-                10 modules.<br /><span>One clear path.</span>
+                10 instruments.<br /><span>One flight plan.</span>
               </h2>
               <p className="section-desc">
-                From strategic foundation to revenue roadmap — each module builds on the last.
+                From strategic foundation to revenue roadmap — each instrument builds on the last.
                 Run them in sequence in a single session.
               </p>
             </div>
@@ -291,11 +291,11 @@ export default function Landing() {
           <div style={{ display: 'flex', marginTop: 12, gap: 16 }}>
             <div style={{ flex: '0 0 calc(50% - 8px)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--purple)', flexShrink: 0 }} />
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Modules 01–05: Strategy foundation — clarity, positioning, and content</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>01–05 · Pre-flight & the climb — clarity, positioning, and content</span>
             </div>
             <div style={{ flex: '0 0 calc(50% - 8px)', display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--teal)', flexShrink: 0 }} />
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Modules 06–10: Execution — platform, content creation, and revenue</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>06–10 · Cruising altitude — platform, content creation, and revenue</span>
             </div>
           </div>
         </div>
@@ -313,13 +313,13 @@ export default function Landing() {
             <span>What you need is a system to make it visible.</span>
           </h2>
           <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', lineHeight: 1.75, marginTop: 16 }}>
-            Most accomplished women 50+ don't have a knowledge problem.
-            They have a packaging problem. A positioning problem. A visibility problem.
-            They know what they know — they just don't have a clear system to turn it into
+            You're already at altitude. Most accomplished founders don't have a knowledge problem —
+            they have a packaging problem, a positioning problem, a visibility problem.
+            They know what they know; they just don't have a clear system to turn it into
             authority, audience, and income.
           </p>
           <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', lineHeight: 1.75, marginTop: 14 }}>
-            Visibility Infrastructure OS solves that — module by module, in one session.
+            Visibility Infrastructure OS solves that — instrument by instrument, in one session.
           </p>
         </div>
       </section>
@@ -348,7 +348,7 @@ export default function Landing() {
       {/* What You'll Have */}
       <section className="landing-section muted">
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <span className="section-eyebrow">What You Leave With</span>
+          <span className="section-eyebrow">What you walk out with</span>
           <h2 className="section-title">Six strategy assets.<br /><span>Built for your business. In one session.</span></h2>
 
           <div style={{
@@ -388,7 +388,7 @@ export default function Landing() {
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <span className="section-eyebrow" style={{ color: 'var(--gold)' }}>Who This Is For</span>
           <h2 className="section-title" style={{ color: 'white', marginBottom: 12 }}>
-            Built for Gen X and Boomers who are<br /><span style={{ color: 'var(--gold)' }}>accomplished - not starting over.</span>
+            Built for founders with<br /><span style={{ color: 'var(--gold)' }}>decades of earned expertise.</span>
           </h2>
           <p className="section-desc" style={{ color: 'rgba(255,255,255,0.55)', marginBottom: 40 }}>
             You've already built something. Now it's time to make that expertise work for you
@@ -462,12 +462,12 @@ export default function Landing() {
       <section className="landing-cta">
         <div className="landing-cta-content">
           <div className="cta-title">
-            YOUR WISDOM<br />
-            IS THE <span>STRATEGY.</span>
+            YOU'RE CLEARED<br />
+            FOR <span>TAKEOFF.</span>
           </div>
           <p className="cta-desc">
-            Stop waiting for the right moment or the perfect plan. This system
-            builds the plan — from what you already know. Start now.
+            You've got the altitude. This files the flight plan — built from what you
+            already know. Begin pre-flight.
           </p>
           <button className="btn-hero-primary" onClick={handleStart} style={{ margin: '0 auto', display: 'inline-flex' }}>
             <span>⚡</span> {ctaLabel}

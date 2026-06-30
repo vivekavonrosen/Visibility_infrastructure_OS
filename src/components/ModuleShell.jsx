@@ -116,14 +116,14 @@ function WeeklyGenerateSection({
     <div className="generate-section" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 16 }}>
       <div className="generate-section-info">
         <div className="generate-section-title">
-          {allDone ? '✅ All 4 Weeks Generated' : `📅 Generate Week ${nextWeek} of ${totalWeeks}`}
+          {allDone ? '✅ All 4 Weeks Plotted' : `📅 Plot Week ${nextWeek} of ${totalWeeks}`}
         </div>
         <div className="generate-section-desc">
           {allDone
             ? 'Your full 4-week content plan is complete. Reset to start over.'
             : completedWeeks === 0
-            ? 'Generate one week at a time. Each week builds on the previous weeks for narrative continuity.'
-            : `${completedWeeks} of ${totalWeeks} weeks done. Click below to generate the next week — it will append to the plan above.`
+            ? 'Plot one week at a time. Each week builds on the previous weeks for narrative continuity.'
+            : `${completedWeeks} of ${totalWeeks} weeks done. Plot the next week below — it will append to the plan above.`
           }
         </div>
       </div>
@@ -149,14 +149,14 @@ function WeeklyGenerateSection({
             border = '1px solid rgba(44,151,175,0.45)';
             cursor = 'default';
             icon = '✅';
-            label = 'Generated';
+            label = 'Plotted';
           } else if (isNext) {
             bg = 'var(--gold)';
             color = 'var(--sidebar-bg)';
             border = '1px solid var(--gold)';
             cursor = isGenerating ? 'not-allowed' : 'pointer';
             icon = '⚡';
-            label = 'Generate';
+            label = 'Plot it';
           } else {
             bg = 'rgba(255,255,255,0.04)';
             color = 'var(--text-muted)';
@@ -455,7 +455,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
                 color: 'white',
                 marginBottom: 5,
               }}>
-                START WITH YOUR WEBSITE
+                PREP YOUR INSTRUMENTS FROM YOUR SITE
               </div>
               <div style={{ fontSize: '0.83rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>
                 Enter your URL and we'll read your site and pre-fill as many fields as possible.
@@ -579,13 +579,13 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         <div className="generate-section">
           <div className="generate-section-info">
             <div className="generate-section-title">
-              {existingOutput ? '↻ Regenerate Strategy Output' : '⚡ Generate Strategy Output'}
+              {existingOutput ? '↻ Run the instruments again' : '⚡ Run the instruments'}
             </div>
             <div className="generate-section-desc">
               {existingOutput
-                ? 'You have a saved output. Regenerating will replace it.'
+                ? 'You have a saved readout. Running again will replace it.'
                 : isFirstModule
-                ? 'Fill in your business context above, then generate your strategic foundation.'
+                ? 'Fill in your business context above, then plot your strategic foundation.'
                 : 'The AI will use your business context plus all prior strategy outputs.'
               }
             </div>
@@ -594,7 +594,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
           {isGenerating ? (
             <button className="btn-generate" onClick={handleAbort} style={{ background: 'linear-gradient(135deg, #c0392b, #96281b)' }}>
               <div className="spinner" />
-              Stop Generation
+              Stop
             </button>
           ) : (
             <button
@@ -603,7 +603,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
               disabled={isFirstModule && !localCtx.brandName?.trim()}
             >
               <span>✨</span>
-              {existingOutput ? 'Regenerate' : 'Generate'}
+              {existingOutput ? 'Re-plot' : 'Plot it'}
             </button>
           )}
         </div>
@@ -674,7 +674,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
               boxShadow: '0 4px 16px rgba(223,178,74,0.35)',
             }}
           >
-            🎉 View Your Playbook →
+            🎉 View your Flight Log →
           </button>
         )}
       </div>

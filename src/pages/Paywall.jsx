@@ -75,7 +75,7 @@ export default function Paywall() {
             YOU'RE IN — ONE LAST STEP
           </div>
           <div style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
-            Your VisibilityOS account is ready. Complete your purchase to unlock the full 10-module system.
+            Your VisibilityOS account is ready. Complete your purchase to open the full 10-module system.
           </div>
         </div>
 

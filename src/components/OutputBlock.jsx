@@ -47,9 +47,9 @@ export default function OutputBlock({
         </div>
         <div className="output-empty">
           <div className="output-empty-icon">✨</div>
-          <div className="output-empty-title">Ready to Generate</div>
+          <div className="output-empty-title">Runway's clear.</div>
           <div className="output-empty-desc">
-            Fill in the fields above and click Generate to build your strategy output.
+            File your flight plan to begin — fill in the fields above, then Plot it.
           </div>
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function OutputBlock({
       <div className="output-block-header">
         <div className="output-block-title">
           {isStreaming ? (
-            <><div className="streaming-dot" /> Generating Strategy...</>
+            <><div className="streaming-dot" /> Running the instruments...</>
           ) : (
             <><span>✅</span> Strategy Output</>
           )}
@@ -121,7 +121,7 @@ export default function OutputBlock({
           {isStreaming && (
             <div className="streaming-indicator">
               <div className="streaming-dot" />
-              Building your strategy...
+              Running the instruments...
             </div>
           )}
           <ReactMarkdown remarkPlugins={[remarkGfm]}>

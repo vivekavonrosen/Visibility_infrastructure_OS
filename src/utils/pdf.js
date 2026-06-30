@@ -461,7 +461,7 @@ export function downloadPlaybookPDF(state, executiveSummary = '') {
   doc.setTextColor(...C.gold);
   doc.text('INFRASTRUCTURE', M, 50);
   doc.setTextColor(255, 255, 255);
-  doc.text('OS PLAYBOOK', M, 62);
+  doc.text('OS FLIGHT LOG', M, 62);
 
   // White content area
   let y = 86;
@@ -477,7 +477,7 @@ export function downloadPlaybookPDF(state, executiveSummary = '') {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(...C.sub);
-  doc.text('Complete Strategy Document', M, y);
+  doc.text('Your Complete Flight Log', M, y);
   y += 6;
   doc.setFillColor(...C.divider);
   doc.rect(M, y, CW, 0.5, 'F');
@@ -498,7 +498,7 @@ export function downloadPlaybookPDF(state, executiveSummary = '') {
     'Module 4: Competitor White Space — Content gap and opportunity analysis',
     'Module 5: Content Pillars — Conversion-oriented content themes',
     'Module 6: Platform Strategy — LinkedIn and Substack engine',
-    'Module 7: 30-Day Content Plan — Strategic visibility calendar',
+    'Module 7: 4-Week Content Plan — Strategic visibility calendar',
     'Module 8: Post Generator — Scroll-stopping content creation',
     'Module 9: Monetization Strategy — Audience conversion roadmap',
     'Module 10: Revenue Acceleration — 30-day income milestone plan',
@@ -661,7 +661,7 @@ export function downloadPlaybookPDF(state, executiveSummary = '') {
 
   const links = [
     ['📅  Book a Discovery Call',  'calendly.com/vivekacoach/discovery-call', 'Ready to turn your strategy into real traction?'],
-    ['💼  Connect on LinkedIn',    'LinkedIn.com/in/VivekavonRosen', 'LinkedIn authority strategy for accomplished women.'],
+    ['💼  Connect on LinkedIn',    'LinkedIn.com/in/VivekavonRosen', 'LinkedIn authority strategy for accomplished founders.'],
     ['📬  Subscribe on Substack',  'vivekavonrosen.substack.com', 'Visibility advice and visibility infrastructure in your inbox.'],
     ['✉️  Email Viveka directly',   'Viveka@beyondthedreamboard.com', 'Questions? Ideas? Just want to say hello?'],
   ];

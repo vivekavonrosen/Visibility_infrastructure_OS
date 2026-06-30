@@ -66,7 +66,7 @@ export default function CompletionPage() {
           }}>
             <span style={{ fontSize: '0.9rem' }}>🎉</span>
             <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-              Strategy Complete
+              Cleared for takeoff
             </span>
           </div>
 
@@ -78,9 +78,8 @@ export default function CompletionPage() {
             lineHeight: 1.05,
             marginBottom: 12,
           }}>
-            YOUR VISIBILITY<br />
-            <span style={{ color: 'var(--gold)' }}>INFRASTRUCTURE OS</span><br />
-            IS BUILT.
+            YOUR FLIGHT PLAN<br />
+            <span style={{ color: 'var(--gold)' }}>IS FILED.</span>
           </div>
 
           <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, maxWidth: 520, marginBottom: 28 }}>
@@ -94,7 +93,7 @@ export default function CompletionPage() {
             {[
               { num: stats.completed, label: 'Modules completed' },
               { num: '10', label: 'Strategy frameworks' },
-              { num: '1', label: 'Complete playbook' },
+              { num: '1', label: 'Complete flight log' },
             ].map((s, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', color: 'var(--gold)', lineHeight: 1 }}>
@@ -135,7 +134,7 @@ export default function CompletionPage() {
               {downloadStep === 'summarising' && <><div style={{ width:16, height:16, border:'2px solid rgba(26,10,46,0.25)', borderTopColor:'var(--sidebar-bg)', borderRadius:'50%', animation:'spin 0.7s linear infinite' }} /> Writing Executive Summary...</>}
               {downloadStep === 'downloading' && '⏳ Building Playbook...'}
               {downloadStep === 'done' && '✅ Downloaded!'}
-              {downloadStep === 'idle' && '⬇ Download Your Playbook'}
+              {downloadStep === 'idle' && '⬇ Download your flight plan'}
             </button>
             <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>
               Downloads as a branded PDF — executive summary, all 10 modules,<br />and your next steps with Viveka's links.
@@ -161,7 +160,7 @@ export default function CompletionPage() {
           justifyContent: 'space-between',
         }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', letterSpacing: '0.06em', color: 'var(--text-primary)' }}>
-            YOUR COMPLETED MODULES
+            YOUR FLIGHT PLAN
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             Click any module to review or regenerate
@@ -224,7 +223,7 @@ export default function CompletionPage() {
           color: 'var(--text-primary)',
           marginBottom: 6,
         }}>
-          YOUR STRATEGY IS READY. NOW WHAT?
+          YOU'RE AT CRUISING ALTITUDE. NOW WHAT?
         </div>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 0 }}>
           A strategy document is only valuable when it's acted on. The next step is turning
@@ -288,7 +287,7 @@ export default function CompletionPage() {
           </div>
           <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 20 }}>
             Follow along for LinkedIn strategy, visibility advice, and real talk about
-            building authority after 50.
+            building visible authority.
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

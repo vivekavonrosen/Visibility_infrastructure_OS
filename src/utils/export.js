@@ -109,7 +109,7 @@ export function generateMarkdownExport(state, executiveSummary = '') {
   let md = '';
 
   // ── Cover ──
-  md += `# VISIBILITY INFRASTRUCTURE OS PLAYBOOK\n`;
+  md += `# VISIBILITY INFRASTRUCTURE OS — FLIGHT LOG\n`;
   md += `## ${ctx.brandName || 'Your Business'}\n\n`;
   md += `*Turn your wisdom into traction.*\n`;
   md += `Generated: ${dateStr}\n\n`;
@@ -152,7 +152,7 @@ export function generateMarkdownExport(state, executiveSummary = '') {
   });
 
   // ── Sign-off ──
-  md += `\n*This playbook was generated using Visibility Infrastructure OS.*\n`;
+  md += `\n*This flight log was generated using Visibility Infrastructure OS.*\n`;
   md += `*© ${now.getFullYear()} Beyond the Dream Board™ — Women's words will change the world.*\n`;
 
   return md;
