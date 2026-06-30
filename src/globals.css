@@ -1310,7 +1310,7 @@ p { margin-bottom: 0; }
   line-height: 1.7;
 }
 
-.dark .section-desc { color: rgba(255,255,255,0.55); }
+.dark .section-desc { color: rgba(255,255,255,0.82); }
 
 .modules-grid {
   display: grid;
@@ -1472,9 +1472,9 @@ p { margin-bottom: 0; }
 }
 
 .for-whom-desc {
-  font-size: 0.82rem;
-  color: rgba(255,255,255,0.5);
-  line-height: 1.55;
+  font-size: 0.86rem;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.6;
 }
 
 /* CTA Section */
