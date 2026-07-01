@@ -92,14 +92,14 @@ export default function Sidebar() {
 
       {/* Completion page link */}
       <div
-        className={`nav-item ${(state.currentModule || 0) >= 10 ? 'active' : ''}`}
-        onClick={() => setCurrentModule(10)}
+        className={`nav-item ${(state.currentModule || 0) >= MODULES.length ? 'active' : ''}`}
+        onClick={() => setCurrentModule(MODULES.length)}
         role="button"
         tabIndex={0}
         style={{
           borderTop: '1px solid rgba(255,255,255,0.08)',
-          background: (state.currentModule || 0) >= 10 ? 'rgba(223,178,74,0.15)' : 'transparent',
-          borderLeft: (state.currentModule || 0) >= 10 ? '3px solid var(--gold)' : '3px solid transparent',
+          background: (state.currentModule || 0) >= MODULES.length ? 'rgba(223,178,74,0.15)' : 'transparent',
+          borderLeft: (state.currentModule || 0) >= MODULES.length ? '3px solid var(--gold)' : '3px solid transparent',
         }}
       >
         <span className="nav-num" style={{ color: 'var(--gold)' }}>🎉</span>

@@ -77,7 +77,7 @@ export default function ApiKeyModal({ onClose }) {
             color: 'var(--teal-dark)',
             lineHeight: 1.5
           }}>
-            💡 <strong>Recommended model:</strong> claude-sonnet-4 is used by default — fast and cost-effective.
+            💡 <strong>Recommended model:</strong> claude-sonnet-5 is used by default — fast and cost-effective.
             Each module generation typically costs $0.01–$0.05.
           </div>
         </div>

@@ -14,14 +14,14 @@ export const INTAKE_FIELDS = [
   { id: 'audienceDesire',  label: 'Audience Desire',        type: 'textarea', placeholder: 'What they truly want — the outcome or transformation' },
   { id: 'brandStrengths',  label: 'Brand Strengths',        type: 'textarea', placeholder: 'What sets your brand apart — results, methodology, credibility' },
   { id: 'founderBg',       label: 'Founder Background',     type: 'textarea', placeholder: 'Your professional history, credentials, and experience relevant to this work' },
-  { id: 'uniqueMechanism', label: 'Unique Mechanism',       type: 'textarea', placeholder: 'Your proprietary framework, system, or process' },
+  { id: 'uniqueMechanism', label: 'Unique Mechanism (USP, Unique System, etc.)', type: 'textarea', placeholder: 'Your proprietary framework, system, or process — the thing only you do', hint: 'Your unique selling proposition, signature system, method, or framework.' },
   { id: 'competitor1',     label: 'Competitor 1',           type: 'text',     placeholder: 'Name or URL' },
   { id: 'competitor2',     label: 'Competitor 2',           type: 'text',     placeholder: 'Name or URL' },
   { id: 'competitor3',     label: 'Competitor 3',           type: 'text',     placeholder: 'Name or URL' },
-  { id: 'platforms',       label: 'Platforms',              type: 'text',     placeholder: 'e.g. LinkedIn, Substack, podcast, speaking' },
+  { id: 'platforms',       label: 'Platforms',              type: 'multichips', options: ['LinkedIn', 'Substack', 'YouTube', 'Facebook', 'Instagram', 'X'], allowOther: true, hint: 'Select all the platforms you use or plan to use.' },
   { id: 'contentApproach', label: 'Current Content Approach', type: 'textarea', placeholder: 'What you post now, how often, and what format' },
   { id: 'growthGoal',      label: 'Growth Goal',            type: 'textarea', placeholder: 'What you want to grow — audience, reach, visibility, reputation' },
-  { id: 'revenueGoal',     label: 'Revenue Goal',           type: 'text',     placeholder: 'e.g. $150K/year, $10K/month, replace corporate salary' },
+  { id: 'revenueGoal',     label: 'Revenue Goal',           type: 'chips',    options: ['$0–50K', '$51K–150K', '$151K–250K', '$251K–500K', '$501K+'], hint: 'Pick your annual revenue target range.' },
   { id: 'brandVoice',      label: 'Brand Voice',            type: 'textarea', placeholder: 'How you sound — e.g. direct, warm, strategic, no-nonsense' },
   { id: 'callToAction',    label: 'CTA Preference',         type: 'text',     placeholder: 'e.g. Book a call, Download guide, Join community' },
   { id: 'geography',       label: 'Geography / Market',     type: 'text',     placeholder: 'e.g. US and Canada, global, English-speaking market' },
@@ -196,6 +196,7 @@ Things this brand could say that would differentiate it — without damaging tru
 ---
 
 End with a section titled: **Messaging Mistakes to Avoid With This Audience**
+${buildCommunityGuidance(ctx)}
 ${qualityBlock()}`,
   },
 
@@ -432,6 +433,7 @@ A clear, simple workflow to create once and adapt across LinkedIn and Substack w
 
 ### Content Calendar Structure
 A suggested weekly rhythm across both platforms that supports growth without overproduction.
+${extraPlatformGuidance(ctx)}
 ${qualityBlock()}`,
   },
 
@@ -729,3 +731,89 @@ How will this business know it is on track at 30, 60, and 90 days? Give specific
 ${qualityBlock()}`,
   },
 ];
+
+// ============================================================
+// Community Strategy — the intake questions live in Module 1's form
+// and are stored on the shared businessContext (ctx). When the client
+// is considering a community, this guidance block is appended to the
+// Module 2 (Audience Psychology) prompt so the community strategy is
+// woven into that output. There is no separate community generation.
+// ============================================================
+
+// Returns '' when the client is not building a community (or hasn't answered),
+// otherwise an instruction block to append to the Audience Psychology prompt.
+export function buildCommunityGuidance(ctx = {}) {
+  const q1 = ctx.q1_considering;
+  if (q1 !== 'Yes' && q1 !== 'Maybe') return '';
+
+  const platformList = [
+    ...(Array.isArray(ctx.q2_platforms) ? ctx.q2_platforms : []),
+    ...(ctx.q2_other && ctx.q2_other.trim() ? [ctx.q2_other.trim()] : []),
+  ];
+  const platforms = platformList.length ? platformList.join(', ') : 'Not specified';
+  const purpose = ctx.q3_purpose || 'Not specified';
+  const price = ctx.q3_price_point || 'Not specified';
+  const audienceLocation = ctx.q3_audience_location === 'Other'
+    ? (ctx.q3_audience_other && ctx.q3_audience_other.trim() ? ctx.q3_audience_other.trim() : 'Other')
+    : (ctx.q3_audience_location || 'Not specified');
+
+  return `
+
+---
+COMMUNITY STRATEGY (the client is considering building a community — weave a dedicated **## Community Strategy** section into your output, after the messaging work above):
+
+Their answers:
+- Considering a community: ${q1}
+- Platform(s) under consideration: ${platforms}
+- Primary job the community must do: ${purpose}
+- Monthly price point: ${price}
+- Where their audience already lives: ${audienceLocation}
+
+Principles to weave in (do not list them back — apply them):
+1. A quiet community is a connection problem, not a content problem. Seed the room with a few engaged connectors, take real conversations off-platform when it matters, and give members reason to talk to each other, not just to the founder. Connected members are more loyal, not less.
+2. Content matters but isn't the whole job. Repurpose one strong piece across formats; simplify communication rather than increasing it; audit email sequences that fire independently and flood people.
+3. Pricing starts low enough that trying it is an easy yes and rises as proof accumulates — never the reverse. Set price by platform and by the community's actual job, not by what feels impressive.
+4. Growth is direct, personal outreach first (DMs, one-on-one invites to specific connectors, direct referral asks with a real shareable invite), not paid ads.
+5. Ask the community what they want to learn on a recurring basis rather than pre-building a course library.
+
+PLATFORM GUIDANCE — only recommend a platform if their platform answer includes "Not sure yet"; otherwise skip straight to strategy for the platform(s) they named. Apply price point and purpose together:
+- SKOOL: best at Free–$50/mo when the purpose is "feed a lower-ticket, high-volume offer" or "build authority and stay free for now." Easiest to set up, built-in gamification. When signals are close, default to Skool as the lower-friction start and say so.
+- KAJABI: best when they want a course library + community in one system with built-in email and checkout; $50–150/mo or mixed free-plus-paid-course.
+- CIRCLE: best at $97/mo+ when the purpose is "feed higher-ticket coaching" or "stand-alone paid membership." More premium, more control, steeper setup.
+- MIGHTY NETWORKS: best at $97/mo+ when they want a native branded mobile app and a course-heavy offer with built-in monetization.
+Make a clear best-fit call with a one-sentence reason and one honest trade-off — not a menu. If two are close, name the single differentiator that breaks the tie.
+
+PURPOSE-TO-PRICING (always apply):
+- "Feed a lower-ticket, high-volume offer" → price low, optimize for volume; the community is a funnel, not the main revenue line.
+- "Feed into higher-ticket coaching or consulting" → price low-to-moderate as a trust-building front door; monetize downstream.
+- "Stand-alone paid membership on its own" → price must sustain the business; start lower than feels impressive with a clear path to raise as testimonials accumulate.
+- "Build authority and stay free for now" → no pricing needed; focus on connection and content repurposing.
+
+Within the Community Strategy section: briefly name and reframe the common founder fear (that connecting members makes them leave, or that it will eat all their time) using principle #1; give the platform call (if applicable); a short pricing take; and a "first three moves this week" list tailored to where their audience already lives (${audienceLocation}) — name the actual platform and what the move looks like there. Keep this section tight (~250 words).`;
+}
+
+// Platform Strategy (Module 6) covers LinkedIn and Substack in depth. If the
+// client selected any additional platforms in Module 1, append instructions to
+// generate a tailored strategy section for each of those too.
+export function extraPlatformGuidance(ctx = {}) {
+  const raw = typeof ctx.platforms === 'string'
+    ? ctx.platforms
+    : Array.isArray(ctx.platforms) ? ctx.platforms.join(', ') : '';
+  const selected = raw.split(',').map(s => s.trim()).filter(Boolean);
+  const core = ['linkedin', 'substack'];
+  const extra = selected.filter(p => !core.includes(p.toLowerCase()));
+  if (!extra.length) return '';
+
+  return `
+
+---
+ADDITIONAL PLATFORMS: This client is also active on or considering: ${extra.join(', ')}.
+In addition to the LinkedIn and Substack strategy above, add a dedicated **## [Platform] Strategy** section for EACH of these platforms. For every one, cover:
+- What this specific audience (accomplished professional women 50+) actually wants on that platform
+- The best-performing formats there and why
+- Optimal tone and level of personal disclosure
+- 3–5 native content ideas that only work on that platform
+- How that platform feeds the business (visibility → trust → conversion)
+- The single biggest mistake to avoid on it
+Keep each platform section concrete and specific to this brand — no generic platform 101 advice.`;
+}
