@@ -4,6 +4,7 @@ import { MODULES, INTAKE_FIELDS } from '../data/modules.js';
 import { getModuleData, getEffectiveOutput } from '../utils/storage.js';
 import { streamCompletion } from '../utils/api.js';
 import OutputBlock from './OutputBlock.jsx';
+import CommunitySection from './CommunitySection.jsx';
 
 
 // Business Context gets special treatment — it's the intake form
@@ -413,6 +414,9 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
   const hasPriorContext = moduleIndex > 0 && !!priorOutput;
   const isFirstModule = moduleIndex === 0;
 
+  // Community Strategy lives as a sub-section inside Module 2 (Audience Psychology)
+  const showCommunitySection = module.id === 'audience-psychology';
+
   return (
     <div className="module-area fade-in">
       {/* Module Header */}
@@ -641,6 +645,9 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         brandName={state.businessContext?.brandName || ''}
       />
 
+      {/* Community Strategy — sub-section inside Module 2 */}
+      {showCommunitySection && <CommunitySection />}
+
       {/* Bottom Navigation */}
       <div className="module-nav-footer">
         <button
@@ -666,7 +673,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         ) : (
           <button
             className="btn-nav btn-nav-next"
-            onClick={() => setCurrentModule(10)}
+            onClick={() => setCurrentModule(MODULES.length)}
             style={{
               background: 'linear-gradient(135deg, var(--gold), var(--gold-muted))',
               borderColor: 'var(--gold)',

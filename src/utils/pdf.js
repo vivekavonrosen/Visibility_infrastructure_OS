@@ -4,6 +4,7 @@
 // ============================================================
 
 import { jsPDF } from 'jspdf';
+import { MODULES, COMMUNITY_STRATEGY_ID } from '../data/modules.js';
 
 const C = {
   purple:   [87,  31,  129],
@@ -128,7 +129,8 @@ function pageHeader(doc, label) {
 }
 
 // ── Module section header (replaces blank divider page) ────
-function moduleHeader(doc, num, title, subtitle) {
+// `badge` overrides the default "MODULE n OF total" pill text.
+function moduleHeader(doc, num, title, subtitle, badge) {
   // Full-width purple band — compact, single page section
   doc.setFillColor(...C.purple);
   doc.rect(0, 0, PW, 28, 'F');
@@ -141,7 +143,7 @@ function moduleHeader(doc, num, title, subtitle) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(6.5);
   doc.setTextColor(...C.dark);
-  doc.text(`MODULE ${num} OF 10`, M + 2.5, 10.8);
+  doc.text(badge || `MODULE ${num} OF ${MODULES.length}`, M + 2.5, 10.8);
 
   // Title + subtitle
   doc.setFont('helvetica', 'bold');
@@ -371,7 +373,7 @@ export function downloadModulePDF(moduleTitle, moduleSubtitle, moduleNum, output
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7);
   doc.setTextColor(...C.dark);
-  doc.text(`MODULE ${moduleNum} OF 10`, M + 2.5, 17);
+  doc.text(`MODULE ${moduleNum} OF ${MODULES.length}`, M + 2.5, 17);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(26);
@@ -600,20 +602,8 @@ export function downloadPlaybookPDF(state, executiveSummary = '') {
   footer(doc, page, 'Executive Summary');
 
   // ── MODULE SECTIONS ─────────────────────────────────────────
-  const modules = [
-    { number: 1,  id: 'business-context',     title: 'Business Context',     subtitle: 'Strategic Brand and Market Analysis' },
-    { number: 2,  id: 'audience-psychology',  title: 'Audience Psychology',   subtitle: 'Messaging Intelligence' },
-    { number: 3,  id: 'authority-positioning',title: 'Authority Positioning', subtitle: 'Differentiation System' },
-    { number: 4,  id: 'competitor-whitespace',title: 'Competitor White Space',subtitle: 'Content Gap Analysis' },
-    { number: 5,  id: 'content-pillars',      title: 'Content Pillars',       subtitle: 'Conversion-Oriented Strategy' },
-    { number: 6,  id: 'platform-strategy',    title: 'Platform Strategy',     subtitle: 'LinkedIn and Substack Engine' },
-    { number: 7,  id: 'content-plan',         title: '30-Day Content Plan',   subtitle: 'Strategic Visibility Calendar' },
-    { number: 8,  id: 'post-generator',       title: 'Post Generator',        subtitle: 'Scroll-Stopping Content' },
-    { number: 9,  id: 'monetization-strategy',title: 'Monetization Strategy', subtitle: 'Audience Conversion System' },
-    { number: 10, id: 'revenue-acceleration', title: 'Revenue Acceleration',  subtitle: 'Monetization Clarity Engine' },
-  ];
-
-  for (const mod of modules) {
+  // Sourced from the single MODULES definition so this stays in sync as modules change.
+  for (const mod of MODULES) {
     const output = state.moduleData?.[mod.id]?.editedOutput
                 || state.moduleData?.[mod.id]?.output || '';
     if (!output) continue;
@@ -627,6 +617,19 @@ export function downloadPlaybookPDF(state, executiveSummary = '') {
     const label = `Module ${mod.number}: ${mod.title}`;
 
     page = renderContent(doc, tokenize(output), label, contentStartY, page);
+
+    // Community Strategy — sub-section rendered right after Module 2
+    if (mod.id === 'audience-psychology') {
+      const community = state.moduleData?.[COMMUNITY_STRATEGY_ID]?.editedOutput
+                     || state.moduleData?.[COMMUNITY_STRATEGY_ID]?.output || '';
+      if (community) {
+        doc.addPage();
+        page++;
+        whitePage();
+        const cStartY = moduleHeader(doc, mod.number, 'Community Strategy', 'Whether, Where & How to Build', 'PART OF MODULE 2');
+        page = renderContent(doc, tokenize(community), 'Community Strategy', cStartY, page);
+      }
+    }
   }
 
   // ── FINAL PAGE: Next Steps ──────────────────────────────────

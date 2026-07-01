@@ -3,7 +3,7 @@
 // Generates clean, reusable strategy documents
 // ============================================================
 
-import { MODULES } from '../data/modules.js';
+import { MODULES, COMMUNITY_STRATEGY_ID } from '../data/modules.js';
 import { getEffectiveOutput } from './storage.js';
 
 // ── Build the executive summary prompt ──────────────────────
@@ -143,12 +143,23 @@ export function generateMarkdownExport(state, executiveSummary = '') {
   // ── Module outputs ──
   MODULES.forEach((module) => {
     const output = getEffectiveOutput(state, module.id);
-    if (!output) return;
+    if (output) {
+      md += `## MODULE ${module.number}: ${module.title.toUpperCase()}\n`;
+      md += `*${module.subtitle}*\n\n`;
+      md += output;
+      md += '\n\n---\n\n';
+    }
 
-    md += `## MODULE ${module.number}: ${module.title.toUpperCase()}\n`;
-    md += `*${module.subtitle}*\n\n`;
-    md += output;
-    md += '\n\n---\n\n';
+    // Community Strategy is a sub-section of Module 2 (Audience Psychology)
+    if (module.id === 'audience-psychology') {
+      const community = getEffectiveOutput(state, COMMUNITY_STRATEGY_ID);
+      if (community) {
+        md += `## MODULE ${module.number} — COMMUNITY STRATEGY\n`;
+        md += `*Whether, Where & How to Build*\n\n`;
+        md += community;
+        md += '\n\n---\n\n';
+      }
+    }
   });
 
   // ── Sign-off ──
