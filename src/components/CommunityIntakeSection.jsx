@@ -4,13 +4,13 @@ import { getModuleData, getEffectiveOutput } from '../utils/storage.js';
 import { buildCommunityPrompt, COMMUNITY_STRATEGY_ID } from '../data/modules.js';
 import { streamCompletion } from '../utils/api.js';
 import CommunityIntake from './CommunityIntake.jsx';
-import OutputBlock from './OutputBlock.jsx';
 
-// Community Strategy — a distinct sub-section rendered inside Module 2
-// (Audience Psychology). Has its own branching intake, generation, and
-// output, stored under the COMMUNITY_STRATEGY_ID key.
-export default function CommunitySection() {
-  const { state, saveModuleOutput, saveModuleInputs, saveEditedOutput } = useApp();
+// Community Strategy INTAKE — rendered inside Module 1 (Business Context).
+// The generated output is displayed separately in Module 2 (Audience
+// Psychology) via CommunityOutputSection. Both share the stored data under
+// the COMMUNITY_STRATEGY_ID key.
+export default function CommunityIntakeSection() {
+  const { state, saveModuleOutput, saveModuleInputs } = useApp();
 
   const moduleData = getModuleData(state, COMMUNITY_STRATEGY_ID);
   const existingOutput = getEffectiveOutput(state, COMMUNITY_STRATEGY_ID);
@@ -70,13 +70,7 @@ export default function CommunitySection() {
   }
 
   return (
-    <div
-      style={{
-        marginTop: 32,
-        paddingTop: 28,
-        borderTop: '2px solid var(--divider, #e6e0f0)',
-      }}
-    >
+    <div style={{ marginTop: 32, paddingTop: 28, borderTop: '2px solid var(--divider, #e6e0f0)' }}>
       <div style={{ marginBottom: 18 }}>
         <div
           style={{
@@ -92,7 +86,6 @@ export default function CommunitySection() {
           🤝 Community Strategy
           <span
             style={{
-              fontFamily: 'var(--font-body, inherit)',
               fontSize: '0.62rem',
               fontWeight: 700,
               letterSpacing: '0.08em',
@@ -107,8 +100,8 @@ export default function CommunitySection() {
           </span>
         </div>
         <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)', lineHeight: 1.6, marginTop: 6 }}>
-          Deciding whether to build a community for your audience? Answer three quick questions and
-          get a personalized, platform-agnostic strategy snapshot.
+          Deciding whether to build a community for your audience? Answer three quick questions here —
+          your personalized strategy snapshot appears in Module 2 (Audience Psychology).
         </p>
       </div>
 
@@ -123,9 +116,9 @@ export default function CommunitySection() {
             </div>
             <div className="generate-section-desc">
               {existingOutput
-                ? 'You have a saved community strategy. Running again will replace it.'
+                ? 'Your strategy is saved in Module 2. Running again will replace it.'
                 : ready
-                ? 'Generates a focused strategy snapshot from your answers above.'
+                ? 'Generates a focused strategy snapshot. It will appear in Module 2.'
                 : 'Answer the first question above to begin.'}
             </div>
           </div>
@@ -157,25 +150,50 @@ export default function CommunitySection() {
             borderRadius: 'var(--radius-md)',
             color: '#c0392b',
             fontSize: '0.85rem',
-            marginBottom: 16,
+            marginTop: 12,
           }}
         >
           ⚠️ {error}
         </div>
       )}
 
-      {!declined && (
-        <OutputBlock
-          moduleId={COMMUNITY_STRATEGY_ID}
-          output={existingOutput}
-          isStreaming={isGenerating}
-          streamingText={streamingText}
-          onEditSave={(val) => saveEditedOutput(COMMUNITY_STRATEGY_ID, val)}
-          moduleTitle="Community Strategy"
-          moduleSubtitle="Whether, Where & How to Build"
-          moduleNum={2}
-          brandName={state.businessContext?.brandName || ''}
-        />
+      {/* Live progress while generating (transient — the saved result lives in Module 2) */}
+      {isGenerating && (
+        <div
+          style={{
+            marginTop: 16,
+            padding: '14px 16px',
+            background: 'var(--bg-alt, #f8f6fc)',
+            border: '1px solid var(--divider, #e6e0f0)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.82rem',
+            lineHeight: 1.6,
+            color: 'var(--text, #2b2340)',
+            whiteSpace: 'pre-wrap',
+            maxHeight: 260,
+            overflowY: 'auto',
+          }}
+        >
+          {streamingText || 'Generating your community strategy…'}
+        </div>
+      )}
+
+      {/* Post-generation confirmation pointing to Module 2 */}
+      {!isGenerating && !declined && existingOutput && (
+        <div
+          style={{
+            marginTop: 14,
+            padding: '10px 14px',
+            borderRadius: 'var(--radius-md)',
+            background: 'rgba(44,151,175,0.1)',
+            border: '1px solid rgba(44,151,175,0.3)',
+            color: 'var(--teal-dark)',
+            fontSize: '0.82rem',
+            lineHeight: 1.5,
+          }}
+        >
+          ✅ Your community strategy is ready — view and edit it in <strong>Module 2 · Audience Psychology</strong>.
+        </div>
       )}
     </div>
   );

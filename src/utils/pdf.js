@@ -618,7 +618,7 @@ export function downloadPlaybookPDF(state, executiveSummary = '') {
 
     page = renderContent(doc, tokenize(output), label, contentStartY, page);
 
-    // Community Strategy — sub-section rendered right after Module 2
+    // Community Strategy output — shown right after Module 2
     if (mod.id === 'audience-psychology') {
       const community = state.moduleData?.[COMMUNITY_STRATEGY_ID]?.editedOutput
                      || state.moduleData?.[COMMUNITY_STRATEGY_ID]?.output || '';

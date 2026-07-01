@@ -4,7 +4,8 @@ import { MODULES, INTAKE_FIELDS } from '../data/modules.js';
 import { getModuleData, getEffectiveOutput } from '../utils/storage.js';
 import { streamCompletion } from '../utils/api.js';
 import OutputBlock from './OutputBlock.jsx';
-import CommunitySection from './CommunitySection.jsx';
+import CommunityIntakeSection from './CommunityIntakeSection.jsx';
+import CommunityOutputSection from './CommunityOutputSection.jsx';
 
 
 // Business Context gets special treatment — it's the intake form
@@ -414,8 +415,9 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
   const hasPriorContext = moduleIndex > 0 && !!priorOutput;
   const isFirstModule = moduleIndex === 0;
 
-  // Community Strategy lives as a sub-section inside Module 2 (Audience Psychology)
-  const showCommunitySection = module.id === 'audience-psychology';
+  // Community Strategy: intake questions in Module 1, generated output in Module 2
+  const showCommunityIntake = module.id === 'business-context';
+  const showCommunityOutput = module.id === 'audience-psychology';
 
   return (
     <div className="module-area fade-in">
@@ -645,8 +647,9 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         brandName={state.businessContext?.brandName || ''}
       />
 
-      {/* Community Strategy — sub-section inside Module 2 */}
-      {showCommunitySection && <CommunitySection />}
+      {/* Community Strategy — questions in Module 1, output in Module 2 */}
+      {showCommunityIntake && <CommunityIntakeSection />}
+      {showCommunityOutput && <CommunityOutputSection />}
 
       {/* Bottom Navigation */}
       <div className="module-nav-footer">

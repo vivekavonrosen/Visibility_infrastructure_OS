@@ -150,7 +150,7 @@ export function generateMarkdownExport(state, executiveSummary = '') {
       md += '\n\n---\n\n';
     }
 
-    // Community Strategy is a sub-section of Module 2 (Audience Psychology)
+    // Community Strategy output is shown with Module 2 (Audience Psychology)
     if (module.id === 'audience-psychology') {
       const community = getEffectiveOutput(state, COMMUNITY_STRATEGY_ID);
       if (community) {
