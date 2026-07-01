@@ -784,6 +784,14 @@ p { margin-bottom: 0; }
   background: rgba(87,31,129,0.02);
 }
 
+/* Bold/italic inside a header cell must stay readable on the purple background
+   (the default strong color is dark, which is unreadable on --purple). */
+.md-content th strong,
+.md-content th em,
+.md-content th a {
+  color: inherit;
+}
+
 /* --- Streaming indicator --- */
 .streaming-indicator {
   display: inline-flex;
