@@ -4,7 +4,7 @@
 // ============================================================
 
 import { jsPDF } from 'jspdf';
-import { MODULES, COMMUNITY_STRATEGY_ID } from '../data/modules.js';
+import { MODULES } from '../data/modules.js';
 
 const C = {
   purple:   [87,  31,  129],
@@ -129,8 +129,7 @@ function pageHeader(doc, label) {
 }
 
 // ── Module section header (replaces blank divider page) ────
-// `badge` overrides the default "MODULE n OF total" pill text.
-function moduleHeader(doc, num, title, subtitle, badge) {
+function moduleHeader(doc, num, title, subtitle) {
   // Full-width purple band — compact, single page section
   doc.setFillColor(...C.purple);
   doc.rect(0, 0, PW, 28, 'F');
@@ -143,7 +142,7 @@ function moduleHeader(doc, num, title, subtitle, badge) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(6.5);
   doc.setTextColor(...C.dark);
-  doc.text(badge || `MODULE ${num} OF ${MODULES.length}`, M + 2.5, 10.8);
+  doc.text(`MODULE ${num} OF ${MODULES.length}`, M + 2.5, 10.8);
 
   // Title + subtitle
   doc.setFont('helvetica', 'bold');
@@ -617,19 +616,6 @@ export function downloadPlaybookPDF(state, executiveSummary = '') {
     const label = `Module ${mod.number}: ${mod.title}`;
 
     page = renderContent(doc, tokenize(output), label, contentStartY, page);
-
-    // Community Strategy output — shown right after Module 2
-    if (mod.id === 'audience-psychology') {
-      const community = state.moduleData?.[COMMUNITY_STRATEGY_ID]?.editedOutput
-                     || state.moduleData?.[COMMUNITY_STRATEGY_ID]?.output || '';
-      if (community) {
-        doc.addPage();
-        page++;
-        whitePage();
-        const cStartY = moduleHeader(doc, mod.number, 'Community Strategy', 'Whether, Where & How to Build', 'PART OF MODULE 2');
-        page = renderContent(doc, tokenize(community), 'Community Strategy', cStartY, page);
-      }
-    }
   }
 
   // ── FINAL PAGE: Next Steps ──────────────────────────────────

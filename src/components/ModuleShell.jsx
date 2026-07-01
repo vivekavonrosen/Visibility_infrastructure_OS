@@ -4,8 +4,7 @@ import { MODULES, INTAKE_FIELDS } from '../data/modules.js';
 import { getModuleData, getEffectiveOutput } from '../utils/storage.js';
 import { streamCompletion } from '../utils/api.js';
 import OutputBlock from './OutputBlock.jsx';
-import CommunityIntakeSection from './CommunityIntakeSection.jsx';
-import CommunityOutputSection from './CommunityOutputSection.jsx';
+import CommunityIntake from './CommunityIntake.jsx';
 
 
 // Business Context gets special treatment — it's the intake form.
@@ -62,9 +61,69 @@ function BusinessContextInputs({ data, onChange, communitySection }) {
   );
 }
 
+// Shared chip (pill button) styling for chip/multichip fields
+function chipStyle(selected) {
+  return {
+    padding: '9px 16px',
+    borderRadius: '999px',
+    fontSize: '0.83rem',
+    fontWeight: selected ? 700 : 500,
+    cursor: 'pointer',
+    border: selected ? '1.5px solid var(--purple)' : '1.5px solid var(--border, #d9d2e6)',
+    background: selected ? 'var(--purple)' : 'white',
+    color: selected ? 'white' : 'var(--text, #2b2340)',
+    transition: 'all 0.15s ease',
+    userSelect: 'none',
+    lineHeight: 1.3,
+  };
+}
+
+// Multi-select chips with an optional free-text "Other". Stored as a
+// comma-joined string so all existing prompt/export consumers keep working;
+// any value not in `options` is treated as the free-text "Other" entry.
+function MultiChips({ field, value, onChange }) {
+  const options = field.options || [];
+  const items = (value || '').split(',').map(s => s.trim()).filter(Boolean);
+  const selectedPresets = items.filter(i => options.includes(i));
+  const otherText = items.filter(i => !options.includes(i)).join(', ');
+
+  const rebuild = (presets, other) =>
+    onChange([...presets, ...(other.trim() ? [other.trim()] : [])].join(', '));
+
+  const togglePreset = (opt) =>
+    rebuild(
+      selectedPresets.includes(opt)
+        ? selectedPresets.filter(p => p !== opt)
+        : [...selectedPresets, opt],
+      otherText
+    );
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {options.map(opt => (
+          <button type="button" key={opt} onClick={() => togglePreset(opt)} style={chipStyle(selectedPresets.includes(opt))}>
+            {opt}
+          </button>
+        ))}
+      </div>
+      {field.allowOther && (
+        <input
+          type="text"
+          className="form-input"
+          placeholder="Other…"
+          value={otherText}
+          onChange={(e) => rebuild(selectedPresets, e.target.value)}
+          style={{ marginTop: 10, maxWidth: 360 }}
+        />
+      )}
+    </div>
+  );
+}
+
 // Reusable field input
 function FieldInput({ field, value, onChange }) {
-  const isWide = field.type === 'textarea';
+  const isWide = field.type === 'textarea' || field.type === 'chips' || field.type === 'multichips';
 
   return (
     <div className={`form-field ${isWide ? 'span-2' : ''}`}>
@@ -74,7 +133,22 @@ function FieldInput({ field, value, onChange }) {
       </label>
       {field.hint && <p className="form-hint">{field.hint}</p>}
 
-      {field.type === 'textarea' ? (
+      {field.type === 'chips' ? (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {field.options?.map(opt => (
+            <button
+              type="button"
+              key={opt}
+              onClick={() => onChange(value === opt ? '' : opt)}
+              style={chipStyle(value === opt)}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      ) : field.type === 'multichips' ? (
+        <MultiChips field={field} value={value} onChange={onChange} />
+      ) : field.type === 'textarea' ? (
         <textarea
           className={`form-textarea ${field.tall ? 'tall' : ''}`}
           value={value}
@@ -249,6 +323,22 @@ function countCompletedWeeks(output, totalWeeks) {
   return Math.min(max, totalWeeks);
 }
 
+// Community Strategy questions — rendered inside Module 1's intake form.
+// Answers are stored on the shared businessContext and feed the Module 2
+// (Audience Psychology) generation. There is no separate generation here.
+function CommunityQuestions({ data, onChange }) {
+  return (
+    <div className="form-section">
+      <div className="form-section-title">Community Strategy (optional)</div>
+      <p className="form-hint" style={{ marginTop: -4, marginBottom: 14 }}>
+        Thinking about building a community? Answer these and your community strategy
+        will be woven into your Module 2 (Audience Psychology) output when you generate it.
+      </p>
+      <CommunityIntake values={data} onChange={onChange} />
+    </div>
+  );
+}
+
 export default function ModuleShell({ moduleIndex, onNavigate }) {
   const { state, setBusinessContext, saveModuleOutput, saveModuleInputs, saveEditedOutput, setCurrentModule } = useApp();
   const module = MODULES[moduleIndex];
@@ -419,8 +509,6 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
   const hasPriorContext = moduleIndex > 0 && !!priorOutput;
   const isFirstModule = moduleIndex === 0;
 
-  // Community Strategy: intake questions live in Module 1's form; output shows in Module 2
-  const showCommunityOutput = module.id === 'audience-psychology';
 
   return (
     <div className="module-area fade-in">
@@ -552,7 +640,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         <BusinessContextInputs
             data={localCtx}
             onChange={handleBusinessContextChange}
-            communitySection={<CommunityIntakeSection />}
+            communitySection={<CommunityQuestions data={localCtx} onChange={handleBusinessContextChange} />}
           />
       ) : (
         module.additionalFields && module.additionalFields.length > 0 && (
@@ -650,9 +738,6 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         moduleNum={module.number}
         brandName={state.businessContext?.brandName || ''}
       />
-
-      {/* Community Strategy output — shown in Module 2 (questions live in Module 1's form) */}
-      {showCommunityOutput && <CommunityOutputSection />}
 
       {/* Bottom Navigation */}
       <div className="module-nav-footer">
