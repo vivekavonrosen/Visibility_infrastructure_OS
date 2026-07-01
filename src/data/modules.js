@@ -263,13 +263,14 @@ ${qualityBlock()}`,
     title: 'Competitor White Space',
     subtitle: 'Content Gap Analysis',
     icon: '🔭',
-    description: 'Identify where competitors sound the same — and where your brand has room to stand apart. This module reveals the gaps, patterns, and opportunities your market is leaving open.',
+    description: 'Identify where competitors sound the same — and where your brand has room to stand apart. Enter competitor URLs in Module 1 (Business Context) and this module reads their sites live to ground the analysis in their real content, then reveals the gaps and opportunities your market is leaving open.',
     additionalFields: [],
-    buildPrompt: (ctx, prior) => `Act as a competitive content strategist.
+    buildPrompt: (ctx, prior, extras) => `Act as a competitive content strategist.
 
-Evaluate the likely content and positioning patterns of the top players in this niche and identify where this brand can stand out with credibility and distinctiveness.
+Evaluate the content and positioning patterns of the top players in this niche and identify where this brand can stand out with credibility and distinctiveness.
 ${priorContext(prior)}
 ${buildContext(ctx)}
+${extras?.competitorData ? `\nLIVE COMPETITOR RESEARCH (scraped from the competitors' actual websites — ground your analysis in THIS real content, quote and reference specifics from it, and do NOT add any disclaimer about lacking live data):\n---\n${extras.competitorData}\n---\n` : ''}
 
 ## 1. Most Common Content Themes Competitors Use
 What topics, angles, and narratives dominate this space?

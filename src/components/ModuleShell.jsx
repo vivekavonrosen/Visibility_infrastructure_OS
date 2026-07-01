@@ -323,6 +323,51 @@ function countCompletedWeeks(output, totalWeeks) {
   return Math.min(max, totalWeeks);
 }
 
+// Scrape the competitor URLs (competitor1/2/3) live so Module 4 analyzes their
+// actual sites. Entries that aren't URLs fall back to name-only analysis.
+// Returns a combined text block for the prompt ('' if no competitors entered).
+async function scrapeCompetitors(ctx) {
+  const entries = [
+    ['Competitor 1', ctx.competitor1],
+    ['Competitor 2', ctx.competitor2],
+    ['Competitor 3', ctx.competitor3],
+  ].filter(([, v]) => v && v.trim());
+
+  if (!entries.length) return '';
+
+  const looksLikeUrl = (s) =>
+    /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(s.trim()) && !/\s/.test(s.trim());
+
+  let anyLive = false;
+
+  const results = await Promise.all(entries.map(async ([label, raw]) => {
+    const val = raw.trim();
+    if (!looksLikeUrl(val)) {
+      return `${label} (${val}): No URL provided — analyze from known category patterns for this type of competitor.`;
+    }
+    const url = val.startsWith('http') ? val : 'https://' + val;
+    try {
+      const res = await fetch('/api/scrape-competitor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.success && json.summary) {
+        anyLive = true;
+        return `${label} (${url}) — LIVE SITE SUMMARY:\n${json.summary}`;
+      }
+      return `${label} (${url}): Could not read the site (${json.error || res.status}) — analyze from known category patterns.`;
+    } catch {
+      return `${label} (${url}): Could not reach the site — analyze from known category patterns.`;
+    }
+  }));
+
+  // If nothing was actually scraped, return '' so Module 4 keeps its honest
+  // category-pattern analysis rather than being told to use "live" content.
+  return anyLive ? results.join('\n\n') : '';
+}
+
 // Community Strategy questions — rendered inside Module 1's intake form.
 // Answers are stored on the shared businessContext and feed the Module 2
 // (Audience Psychology) generation. There is no separate generation here.
@@ -434,7 +479,21 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
     // Build prompt
     const ctx = moduleIndex === 0 ? localCtx : state.businessContext;
     const prior = getPriorOutput();
-    const extras = moduleIndex === 0 ? null : localInputs;
+    let extras = moduleIndex === 0 ? null : localInputs;
+
+    // Module 4 (Competitor White Space): scrape the competitor URLs live so the
+    // analysis is grounded in their actual sites rather than generic patterns.
+    if (module.id === 'competitor-whitespace') {
+      setStreamingText('🔍 Reading competitor sites…');
+      try {
+        const competitorData = await scrapeCompetitors(ctx);
+        extras = { ...(extras || {}), competitorData };
+      } catch {
+        // Non-fatal — fall back to name-only analysis
+        extras = { ...(extras || {}), competitorData: '' };
+      }
+      setStreamingText('');
+    }
 
     // For weekly modules, capture which week we're generating and the prior weeks' output
     const weekToGenerate = isWeekly ? (weekOverride || nextWeek) : 0;
