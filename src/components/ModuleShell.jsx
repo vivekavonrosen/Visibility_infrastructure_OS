@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, Fragment } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { MODULES, INTAKE_FIELDS } from '../data/modules.js';
 import { getModuleData, getEffectiveOutput } from '../utils/storage.js';
@@ -8,8 +8,9 @@ import CommunityIntakeSection from './CommunityIntakeSection.jsx';
 import CommunityOutputSection from './CommunityOutputSection.jsx';
 
 
-// Business Context gets special treatment — it's the intake form
-function BusinessContextInputs({ data, onChange }) {
+// Business Context gets special treatment — it's the intake form.
+// `communitySection` is injected right after the "Platforms & Content" section.
+function BusinessContextInputs({ data, onChange, communitySection }) {
   const sections = [
     {
       title: 'Core Business',
@@ -40,19 +41,22 @@ function BusinessContextInputs({ data, onChange }) {
   return (
     <>
       {sections.map((section) => (
-        <div key={section.title} className="form-section">
-          <div className="form-section-title">{section.title}</div>
-          <div className="form-grid">
-            {section.fields.map((field) => (
-              <FieldInput
-                key={field.id}
-                field={field}
-                value={data[field.id] || ''}
-                onChange={(val) => onChange(field.id, val)}
-              />
-            ))}
+        <Fragment key={section.title}>
+          <div className="form-section">
+            <div className="form-section-title">{section.title}</div>
+            <div className="form-grid">
+              {section.fields.map((field) => (
+                <FieldInput
+                  key={field.id}
+                  field={field}
+                  value={data[field.id] || ''}
+                  onChange={(val) => onChange(field.id, val)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+          {section.title === 'Platforms & Content' && communitySection}
+        </Fragment>
       ))}
     </>
   );
@@ -415,8 +419,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
   const hasPriorContext = moduleIndex > 0 && !!priorOutput;
   const isFirstModule = moduleIndex === 0;
 
-  // Community Strategy: intake questions in Module 1, generated output in Module 2
-  const showCommunityIntake = module.id === 'business-context';
+  // Community Strategy: intake questions live in Module 1's form; output shows in Module 2
   const showCommunityOutput = module.id === 'audience-psychology';
 
   return (
@@ -549,6 +552,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         <BusinessContextInputs
             data={localCtx}
             onChange={handleBusinessContextChange}
+            communitySection={<CommunityIntakeSection />}
           />
       ) : (
         module.additionalFields && module.additionalFields.length > 0 && (
@@ -647,8 +651,7 @@ export default function ModuleShell({ moduleIndex, onNavigate }) {
         brandName={state.businessContext?.brandName || ''}
       />
 
-      {/* Community Strategy — questions in Module 1, output in Module 2 */}
-      {showCommunityIntake && <CommunityIntakeSection />}
+      {/* Community Strategy output — shown in Module 2 (questions live in Module 1's form) */}
       {showCommunityOutput && <CommunityOutputSection />}
 
       {/* Bottom Navigation */}
